@@ -2,6 +2,8 @@ extends Node
 
 class_name WorldTile
 
+# TODO: Use enums instead of strings
+
 var terrain_type: String = "default"
 var agriculture_type: String = "default"
 var pop: int = 0
