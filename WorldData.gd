@@ -1,10 +1,13 @@
 extends Node
 
-#enum TERRAIN_COLORS {
-#	ARABLE = 0x723E1B,
-#	PASTURE = 0xDBC164,
-#	WASTE = 0x5F6B41
-#}
+## NOTES
+# This file is getting bloated with different features, will need
+# to split it up soon.
+#
+# Getting data from the world onto the map efficiently is a problem...
+#
+#
+#
 
 # terrain colors
 const arable_color := Color("5F6B41")
@@ -24,13 +27,13 @@ var tile_dict := {}
 var sprite_dict := {}
 var WorldTile
 
-onready var tilemap: TileMap = get_node("../TileMap")
 onready var world_node: Node2D = get_node("../World")
 
 var pressed: bool = false # jank as fuck, use the better way soon
 
 # map modes
-var map_mode = "default"
+var current_map_mode = 0
+var map_modes = ["terrain", "peasant", "landholdings"]
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -38,14 +41,7 @@ func _ready():
 	_generate_world_sprite()
 
 func _process(delta):
-	if map_mode == "peasant":
-			var current
-			var alpha
-			for x in range (dimensions.x):
-				for y in range (dimensions.y):
-					current = tile_dict[Vector2(x, y)]
-					alpha = float(current.peasant_pop) / (current.peasant_pop + 100000)
-					sprite_dict[Vector2(x, y)].modulate = Color(0,0,1, alpha) 		
+	_update_map()
 	
 func _input(event):
 	if event is InputEventMouseButton:
@@ -53,40 +49,16 @@ func _input(event):
 			_print_tile_summary()
 			
 	# switch mapmode
-	if event is InputEventKey and event.scancode == KEY_M and not event.echo and not pressed:
-			print("switch map mode")
+	if event.is_action("mapmode_forward") and not event.echo and not pressed:
+			if current_map_mode == map_modes.size() - 1:
+				current_map_mode = 0
+			else:
+				current_map_mode += 1
+			print("switch map mode to " + map_modes[current_map_mode])
 			pressed = true
-			map_mode = "peasant"
 			
-			# rescan map to change mapmode (highly suboptimal)
-			var current
-			var alpha
-			for x in range (dimensions.x):
-				for y in range (dimensions.y):
-					current = tile_dict[Vector2(x, y)]
-					alpha = float(current.peasant_pop) / (current.peasant_pop + 100000)
-					sprite_dict[Vector2(x, y)].modulate = Color(0,0,1, alpha) 
-			
-	if event is InputEventKey and event.scancode == KEY_M and event.pressed == false:
+	if event.is_action("mapmode_forward") and event.pressed == false:
 			pressed = false
-
-#func _generate_world_tilemap():
-#	for x in range (dimensions.x):
-#		world.append([])
-#		for y in range (dimensions.y):
-#			var tile = WorldTile.new()
-#
-#			var terrain = randi() % 3 # random terrain
-#			if terrain == 0:
-#				tile.type = "waste"
-#			if terrain == 1:
-#				tile.type = "arable"
-#			if terrain == 2:
-#				tile.type = "pasture"
-#
-#			tilemap.set_cell(x, y, terrain)
-#			world[x].append(tile)
-#	# tilemap.tile_set.tile_set_modulate(0, Color(255, 255, 255))	
 
 func _generate_world_sprite():
 	var base_tile = load("res://Graphics/Tile.png")
@@ -164,3 +136,30 @@ func _get_noise_tile(noise_sample):
 	
 func _generate_population():
 	pass
+
+###########################
+## MAP DISPLAY FUNCTIONS ##
+###########################
+
+# Updates the map display.
+# TODO: How can we only update when we need too? (far too inefficient currently)
+func _update_map():
+	if map_modes[current_map_mode] == "peasant":
+		var current
+		var alpha
+		for x in range (dimensions.x):
+			for y in range (dimensions.y):
+				current = tile_dict[Vector2(x, y)]
+				alpha = float(current.peasant_pop) / (current.peasant_pop + 100000)
+				sprite_dict[Vector2(x, y)].modulate = Color(0,0,1, alpha) 
+	if map_modes[current_map_mode] == "terrain":
+		var current
+		for x in range (dimensions.x):
+			for y in range (dimensions.y):
+				current = tile_dict[Vector2(x, y)]
+				if current.agriculture_type == "arable":
+					sprite_dict[Vector2(x, y)].modulate = arable_color
+				if current.agriculture_type == "pasture":
+					sprite_dict[Vector2(x, y)].modulate = pasture_color	
+				if current.agriculture_type == "waste":
+					sprite_dict[Vector2(x, y)].modulate = waste_color	

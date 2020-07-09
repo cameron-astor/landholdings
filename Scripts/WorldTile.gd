@@ -23,6 +23,6 @@ func _process(delta):
 	if pop_update_flag:
 		pop = peasant_pop + aristocrat_pop + vagabond_pop
 		pop_update_flag = false
-#	if (randi() % 5 == 0):
-#		peasant_pop += 100 # experiment population growth
-#		pop_update_flag = true
+	if (randi() % 5 == 0):
+		peasant_pop += 100 # experiment population growth
+		pop_update_flag = true
