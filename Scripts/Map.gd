@@ -22,10 +22,16 @@ var height
 # base map tile
 var base_tile
 
+# MapTile class
+var MapTile
+
 # terrain colors
 const arable_color := Color("5F6B41")
 const pasture_color := Color("DBC164")
 const waste_color := Color("723E1B")
+
+# holdings colormap
+var holding_colors := {}
 
 # map modes
 var current_map_mode = 0
@@ -55,6 +61,7 @@ func _input(event):
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	base_tile = load("res://Graphics/Tile.png")
+	MapTile = load("res://Scripts/MapTile.gd")
 	
 	width = world_data.dimensions.x
 	height = world_data.dimensions.y
@@ -72,19 +79,38 @@ func _ready():
 func _process(delta):
 	_update_map()
 	# print(map[50][50].modulate)
+	# print(Engine.get_frames_per_second())
+	#pass
 
 # First time map gen
 func _generate_map():
 	
 	for x in range (width):
 		for y in range (height):
+			
+			# Create tile sprite
 			var sprite = Sprite.new()
 			sprite.texture = base_tile
 			sprite.position.x = x * 16
 			sprite.position.y = y * 16	
+
+			# Add holding data to color map
+			var color = Color(rand_range(0,1), rand_range(0,1), rand_range(0,1))
+			var holding_id = world[x][y].holding_id
+			if holding_id != -1:
+				holding_colors[holding_id] = color
 			
+### Possible MapTile arrangement
+#			var sprite = MapTile.new()
+#			sprite.texture = base_tile
+#			sprite.position.x = x * 16
+#			sprite.position.y = y * 16
+#			sprite.assigned_tile = world[x][y]
+#			sprite.current_map_mode = sprite.MAPMODES.Terrain
+				
 			map[x][y] = sprite
 			add_child(sprite)
+	
 
 func _print_tile_summary():
 	var tile_summary := {}
@@ -117,7 +143,7 @@ func _update_map():
 		for x in range (width):
 			for y in range (height):
 				current = world[x][y]
-				alpha = float(current.peasant_pop) / (current.peasant_pop + 100000)
+				alpha = float(current.peasant_pop) / (current.peasant_pop + 100)
 				map[x][y].modulate = Color(0,0,1, alpha) 
 	if map_modes[current_map_mode] == "terrain":
 		var current
@@ -130,3 +156,11 @@ func _update_map():
 					map[x][y].modulate = pasture_color	
 				if current.agriculture_type == "waste":
 					map[x][y].modulate = waste_color	
+	if map_modes[current_map_mode] == "landholdings":
+		var current
+		for x in range (width):
+			for y in range (height):
+				current = world[x][y].holding_id
+				if current != -1:
+					map[x][y].modulate = holding_colors[current]
+						

@@ -37,7 +37,8 @@ func _process(delta):
 
 func _generate_world():
 	_generate_terrain()
-	_generate_holdings()		
+	_generate_holdings()
+	_generate_population()		
 
 func _generate_holdings():
 	var holding_id = 0
@@ -92,4 +93,13 @@ func _get_noise_tile(noise_sample):
 	return AGRICULTURE_TYPES.waste
 	
 func _generate_population():
-	pass
+	var current
+	var pop
+	for x in range (dimensions.x):
+		for y in range (dimensions.y):
+			current = world[x][y]
+			if current.agriculture_type == "arable":
+				pop = randi() % 10
+				if (randi() % 3 == 0):
+					current.peasant_pop = pop
+			

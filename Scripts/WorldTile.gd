@@ -12,6 +12,7 @@ var vagabond_pop: int = 0
 var aristocrat_pop: int = 0
 var holding_type: String = "default"
 var holding_id: int = -1
+var holding_color
 
 # Has population been changed in the last tick?
 var pop_update_flag: bool = true
@@ -25,6 +26,6 @@ func _process(delta):
 	if pop_update_flag:
 		pop = peasant_pop + aristocrat_pop + vagabond_pop
 		pop_update_flag = false
-	if (randi() % 5 == 0):
-		peasant_pop += 100 # experiment population growth
-		pop_update_flag = true
+#	if (randi() % 5 == 0):
+#		peasant_pop += 100 # experiment population growth
+#		pop_update_flag = true

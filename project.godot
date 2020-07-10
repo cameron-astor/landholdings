@@ -9,12 +9,18 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "Sprite",
+"class": "MapTile",
+"language": "GDScript",
+"path": "res://Scripts/MapTile.gd"
+}, {
 "base": "Node",
 "class": "WorldTile",
 "language": "GDScript",
 "path": "res://Scripts/WorldTile.gd"
 } ]
 _global_script_class_icons={
+"MapTile": "",
 "WorldTile": ""
 }
 
