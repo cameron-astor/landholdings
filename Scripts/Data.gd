@@ -1,8 +1,7 @@
 extends Node
 
 ## NOTES
-# This file is getting bloated with different features, will need
-# to split it up soon.
+# Consider how to logically split this up
 #
 # Getting data from the world onto the map efficiently is a problem...
 #
@@ -18,11 +17,32 @@ export var period := 20
 export var lacunarity := 1.5
 export var persistence := 0.75
 
+# SIMULATION TIME COMPONENTS
+export var tick_rate := 50
+# TIME SYSTEM 
+var thread
+# according to docs, reading arrays and dictionaries from multiple
+# threads is okay, but adding elements requires mutex (we'll see
+# what happens)
+var mutex
+var semaphore
+var timer: int = 0
+
+# WORLD ATTRIBUTES
+var date
+
 # DATA CONTAINERS
+# A 2D array of WorldTile representing the world
 var world := []
+var peasant_families := []
+# Maps holding ID to peasant ID, showing what peasant family
+# owns what holdings
+var peasant_holdings := {}
 
 # CLASSES
 var WorldTile
+var PeasantFamily
+var Date
 
 # NODE REFERENCES
 onready var map_node: Node2D = get_node("../Map")
@@ -30,15 +50,25 @@ onready var map_node: Node2D = get_node("../Map")
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	WorldTile = load("res://Scripts/WorldTile.gd")
+	Date = load("res://Scripts/Date.gd")
+	PeasantFamily = load("res://Scripts/PeasantFamily.gd")
+	date = Date.new()
 	_generate_world()
 
 func _process(delta):
-	pass
+	# game clock system
+	#if tick_rate == 3:
+	if timer == tick_rate: # janky game time system
+		date._update_date()
+		_update_sim()
+		timer = 0
+	timer += 1
 
 func _generate_world():
 	_generate_terrain()
 	_generate_holdings()
-	_generate_population()		
+#	_generate_population()
+	_generate_peasants()	
 
 func _generate_holdings():
 	var holding_id = 0
@@ -75,7 +105,9 @@ func _generate_terrain():
 				tile.agriculture_type = "waste"
 			
 			world[x].append(tile)
-			add_child(tile)			
+			
+			# Maybe we don't even need these as nodes...
+			# add_child(tile)			
 			
 enum AGRICULTURE_TYPES {
 	arable,
@@ -103,3 +135,25 @@ func _generate_population():
 				if (randi() % 3 == 0):
 					current.peasant_pop = pop
 			
+func _generate_peasants():
+	var current
+	var peasant
+	var id = 0
+	for x in range (dimensions.x):
+		for y in range (dimensions.y):
+			current = world[x][y]
+			if current.holding_id != -1:
+				peasant = PeasantFamily.new()
+				peasant.size = (randi() % 10) + 1
+				peasant.id = id
+				peasant_holdings[current.holding_id] = peasant	
+				id += 1
+
+func _update_sim():
+	var current
+	for x in range (dimensions.x):
+		for y in range (dimensions.y):
+			current = world[x][y]
+			current._update_ecology(date.month)
+			
+

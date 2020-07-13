@@ -12,7 +12,10 @@ extends Node2D
 
 # reference to world data
 onready var world_data: Node = get_node("../Data") 
+# World tile data
 var world
+# Dictionary of holdings to peasant family
+var peasant_holdings
 
 # 2D array of sprites
 var map := []
@@ -32,10 +35,12 @@ const waste_color := Color("723E1B")
 
 # holdings colormap
 var holding_colors := {}
+var peasant_colors := {}
 
 # map modes
 var current_map_mode = 0
-var map_modes = ["terrain", "peasant", "landholdings"]
+var map_modes = ["terrain", "population", "landholdings", 
+				"peasants", "food"]
 	
 ################	
 ## USER INPUT ##
@@ -73,14 +78,12 @@ func _ready():
 			map[x].append(0)
 			
 	world = world_data.world
+	peasant_holdings = world_data.peasant_holdings
 	_generate_map()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	_update_map()
-	# print(map[50][50].modulate)
-	# print(Engine.get_frames_per_second())
-	#pass
 
 # First time map gen
 func _generate_map():
@@ -99,6 +102,13 @@ func _generate_map():
 			var holding_id = world[x][y].holding_id
 			if holding_id != -1:
 				holding_colors[holding_id] = color
+				
+			# Add peasant data to color map
+			color = Color(rand_range(0,1), rand_range(0,1), rand_range(0,1))
+			holding_id = world[x][y].holding_id
+			if holding_id != -1:
+				var peasant_id = peasant_holdings[world[x][y].holding_id].id
+				peasant_colors[peasant_id] = color
 			
 ### Possible MapTile arrangement
 #			var sprite = MapTile.new()
@@ -124,10 +134,13 @@ func _print_tile_summary():
 		tile_summary["1. Coordinates"] = coordinates
 		tile_summary["2. Agriculture"] = tile.agriculture_type
 		tile_summary["3. Population Total"] = tile.pop
-	#	tile_summary["4. Peasants"] = tile_dict[coordinates].peasant_pop
-	#	tile_summary["5. Aristocrats"] = tile_dict[coordinates].aristocrat_pop
-	#	tile_summary["6. Vagabonds"] = tile_dict[coordinates].vagabond_pop
-		tile_summary["7. Holding ID"] = tile.holding_id
+		tile_summary["4. Holding ID"] = tile.holding_id
+		if tile.holding_id != -1:
+			tile_summary["5. Peasant Family ID"] = peasant_holdings[tile.holding_id].id
+		else:
+			tile_summary["5. Peasant Family ID"] = "No peasants"
+		tile_summary["6. Food"] = tile.food
+		
 		print(tile_summary)	
 	
 ###########################
@@ -137,18 +150,18 @@ func _print_tile_summary():
 # Updates the map display.
 # TODO: How can we only update when we need too? (far too inefficient currently)
 func _update_map():
-	if map_modes[current_map_mode] == "peasant":
-		var current
-		var alpha
-		for x in range (width):
-			for y in range (height):
+	
+	var current
+	var alpha
+	for x in range (width):
+		for y in range (height):
+			
+			if map_modes[current_map_mode] == "population":			
 				current = world[x][y]
 				alpha = float(current.peasant_pop) / (current.peasant_pop + 100)
 				map[x][y].modulate = Color(0,0,1, alpha) 
-	if map_modes[current_map_mode] == "terrain":
-		var current
-		for x in range (width):
-			for y in range (height):
+				
+			if map_modes[current_map_mode] == "terrain":
 				current = world[x][y]
 				if current.agriculture_type == "arable":
 					map[x][y].modulate = arable_color
@@ -156,11 +169,18 @@ func _update_map():
 					map[x][y].modulate = pasture_color	
 				if current.agriculture_type == "waste":
 					map[x][y].modulate = waste_color	
-	if map_modes[current_map_mode] == "landholdings":
-		var current
-		for x in range (width):
-			for y in range (height):
+					
+			if map_modes[current_map_mode] == "landholdings":
 				current = world[x][y].holding_id
 				if current != -1:
 					map[x][y].modulate = holding_colors[current]
 						
+			if map_modes[current_map_mode] == "peasants":
+				current = world[x][y].holding_id
+				if current != -1:
+					map[x][y].modulate = peasant_colors[peasant_holdings[current].id]
+					
+			if map_modes[current_map_mode] == "food":
+				current = world[x][y].food
+				alpha = float(current) / (current + 5)
+				map[x][y].modulate = Color(0,1,0, alpha) 					
