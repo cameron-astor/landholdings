@@ -74,6 +74,7 @@ public class Map : Node2D
         _InitializeGraphics();
         _InitializeData();
         _GenerateMap();
+        // _GenerateMapImage();
     }
 
     public override void _Process(float delta)
@@ -216,6 +217,56 @@ public class Map : Node2D
                     alpha = (float) current.food / current.food + 5;
                     map[x, y].Modulate = new Color(0, 1, 0, (float) alpha);
                 }
+            }
+        }
+    }
+
+    // EXPERIMENTAL Image-based map
+    // This one is a failure - slower than the Sprite based approach, probably
+    // because of the number of calculations required to fill in every pixel (this is probably
+    // handled much more efficiently by the Engine with Sprite)
+    Image mapImage;
+    ImageTexture mapImageTexture;
+    Sprite mapSprite;
+    private void _GenerateMapImage()
+    {
+        // Instantiate an empty image
+        mapImage = new Image();
+        mapImage.Create(width * 16, height * 16, false, Image.Format.Rgbaf);
+
+        mapImageTexture = new ImageTexture();
+
+        // test pixel setting
+        mapImage.Lock(); // allow access to data
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                _GenerateTileFromPixels(x, y);
+            }
+        }
+        mapImage.Unlock();
+
+        // set texture
+        mapImageTexture.CreateFromImage(mapImage);
+        
+        // setup sprite
+        mapSprite = new Sprite();
+        mapSprite.Texture = mapImageTexture;
+
+        // add to scene graph
+        this.AddChild(mapSprite);
+    }
+
+    private void _GenerateTileFromPixels(int x, int y)
+    {
+        int pixelCoordX = x * 16;
+        int pixelCoordY = y * 16;
+        for (int pixelx = 0; pixelx < pixelCoordX + 16; pixelx++)
+        {
+            for (int pixely = 0; pixely < pixelCoordY + 16; pixely++)
+            {
+                mapImage.SetPixel(pixelx, pixely, new Color(0, 0, 0, 0.75f));
             }
         }
     }
