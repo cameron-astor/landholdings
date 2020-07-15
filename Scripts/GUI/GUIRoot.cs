@@ -3,19 +3,31 @@ using System;
 
 public class GUIRoot : Control
 {
-    // Declare member variables here. Examples:
-    // private int a = 2;
-    // private string b = "text";
 
-    // Called when the node enters the scene tree for the first time.
+    // GUI nodes
+    Label date; 
+    Label FPS;
+    Data worldData;
+
     public override void _Ready()
     {
-        
+        worldData = GetNode<Data>("../../World/Data");
+        date = GetNode<Label>("DateUI");
+        FPS = GetNode<Label>("FPS");
     }
 
-//  // Called every frame. 'delta' is the elapsed time since the previous frame.
-//  public override void _Process(float delta)
-//  {
-//      
-//  }
+    public override void _Process(float delta)
+    {
+        _UpdateFPS();
+    }
+
+    private void _UpdateDate()
+    {
+        // todo
+    }
+
+    private void _UpdateFPS()
+    {
+        FPS.Text = ("FPS: " + Engine.GetFramesPerSecond());
+    }
 }

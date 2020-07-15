@@ -47,7 +47,7 @@ public class Map : Node2D
     public override void _Input(InputEvent @event)
     {
         // Tile click
-        if (@event is InputEventMouseButton e)
+        if (@event is InputEventMouseButton e && e.Pressed)
         {
             if ((ButtonList) e.ButtonIndex is ButtonList.Left)
             {
@@ -135,8 +135,8 @@ public class Map : Node2D
 			    holdingID = world[x, y].holdingID;
 			    if (holdingID != -1)
                 {
-                    // int peasantID = peasantHoldings[world[x, y].holdingID];
-                    // peasantColors[peasantID] = color;
+                    int peasantID = peasantHoldings[world[x, y].holdingID];
+                    peasantColors[peasantID] = color;
                 }
 
                 map[x, y] = sprite;
@@ -172,6 +172,7 @@ public class Map : Node2D
         }
     }
 
+    // Updates the map tiles for the current mapmode
     private void _UpdateMap()
     {
         WorldTile current;
@@ -180,6 +181,7 @@ public class Map : Node2D
         {
             for (int y = 0; y < height; y++)
             {
+                // Map mode logic
                 current = world[x, y];
                 if (mapModes[currentMapMode] == MAP_MODES.Terrain)
                 {
@@ -191,6 +193,29 @@ public class Map : Node2D
                         map[x, y].Modulate = cWaste;
                 }
 
+                if (mapModes[currentMapMode] == MAP_MODES.Population)
+                {
+                    // Not implemented
+                    map[x, y].Modulate = new Color(0, 0, 0, 0.0f);
+                }
+
+                if (mapModes[currentMapMode] == MAP_MODES.Landholdings)
+                {
+                    if (current.holdingID != -1)
+                        map[x, y].Modulate = holdingColors[current.holdingID];
+                }
+
+                if (mapModes[currentMapMode] == MAP_MODES.Peasants)
+                {
+                    if (current.holdingID != -1)
+                        map[x, y].Modulate = peasantColors[peasantHoldings[current.holdingID]];
+                }
+
+                if (mapModes[currentMapMode] == MAP_MODES.Food)
+                {
+                    alpha = (float) current.food / current.food + 5;
+                    map[x, y].Modulate = new Color(0, 1, 0, (float) alpha);
+                }
             }
         }
     }

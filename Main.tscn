@@ -30,3 +30,23 @@ script = ExtResource( 4 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="FPS" type="Label" parent="GUI/GUIRoot"]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 69.0
+margin_bottom = 23.0
+text = "FPS: "
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="DateUI" type="Label" parent="GUI/GUIRoot"]
+margin_left = 5.8763
+margin_top = 32.4983
+margin_right = 65.8763
+margin_bottom = 56.4983
+text = "Date: "
+__meta__ = {
+"_edit_use_anchors_": false
+}
