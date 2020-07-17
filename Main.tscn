@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://Scripts/Map/Map.cs" type="Script" id=1]
 [ext_resource path="res://Scripts/Data/Data.cs" type="Script" id=2]
 [ext_resource path="res://Scripts/GUI/Camera.cs" type="Script" id=3]
 [ext_resource path="res://Scripts/GUI/GUIRoot.cs" type="Script" id=4]
+[ext_resource path="res://Scripts/Data/World.cs" type="Script" id=5]
 
 [node name="WorldRoot" type="Node"]
 
@@ -14,6 +15,7 @@ current = true
 script = ExtResource( 3 )
 
 [node name="World" type="Node2D" parent="."]
+script = ExtResource( 5 )
 
 [node name="Data" type="Node" parent="World"]
 script = ExtResource( 2 )

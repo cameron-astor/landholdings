@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scripts\Data\Data.cs" />
+    <Compile Include="Scripts\Data\World.cs" />
     <Compile Include="Scripts\GUI\Camera.cs" />
     <Compile Include="Scripts\Data\Date.cs" />
     <Compile Include="Scripts\Data\PeasantFamily.cs" />

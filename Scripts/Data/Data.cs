@@ -4,10 +4,15 @@ using System.Collections.Generic;
 
 /* TODO 
 # Consider how to logically split this up
-#
+  Separate simulation logistics from the game data?
+
 # Getting data from the world onto the map efficiently is a problem...
-#
-# Use enums instead of strings for the tile data (e.g. pasture, waste, etc.)
+*/
+
+/* 
+    Contains the data that makes up the simulation and exposes
+    functions to update it (i.e. the functions that make up
+    the activity of the world)
 */
 public class Data : Node
 {
@@ -28,10 +33,17 @@ public class Data : Node
     [Export]
     private float persistence = 0.75f;
 
-    // Simulation parameters
+    // Simulation parameters (should be factored into another class at some point idk)
     [Export]
-    private int tickRate = 50;
+    private int tickRate = 5;
     private int timer = 0;
+    [Export]
+    private int batchRegions = 5; // number of map subdivisions for updates
+    private int currentRegion = 0; // Tracks the current region being processed
+    private Vector2 regionDimensions; // the dimensions of each region (calculated at start of sim)
+    private int remainder = 0; // In the case of uneven division of width into batch regions, a remainder to append
+    private int xlocation = 0; // the current upper left corner of the region
+
 
     // World attributes
     private Date date;
@@ -52,14 +64,27 @@ public class Data : Node
         world = new WorldTile[width, height];
         peasantHoldings = new Godot.Collections.Dictionary<int, int>();
 
+        _CalculateRegionDimensions();
         _GenerateWorld();
     }
 
     public override void _PhysicsProcess(float delta)
     {
+        if (currentRegion < batchRegions) 
+        {
+            bool addRemainder = false;
+            currentRegion++;
+            int xloc = (batchRegions * currentRegion);
+            if (currentRegion == batchRegions - 1)
+                addRemainder = true;
+            GD.Print("Update region at " + xloc + " with remainder " + addRemainder);
+            _UpdateRegion(xloc, addRemainder);
+        }
+
         if (timer == tickRate)
         {
-            _UpdateSim();
+            currentRegion = 0;
+            // _UpdateSim();
             timer = 0;
         }
         timer++;
@@ -78,6 +103,32 @@ public class Data : Node
 
             }
         }
+    }
+
+    // Takes in the upper left corner x value of the region to be updated
+    private void _UpdateRegion(int xloc, bool addRemainder)
+    {
+        int r = 0;
+        if (addRemainder)
+            r = remainder;
+
+        for (int x = xloc; x < (xloc + regionDimensions.x + r); x++) 
+        {
+            for (int y = 0; y < regionDimensions.y; y++)
+            {
+                GD.Print(x);
+            }
+        }
+
+    }
+
+    private void _CalculateRegionDimensions()
+    {
+        regionDimensions = new Vector2(width / batchRegions, height);
+        if (width % batchRegions != 0)
+        {
+            remainder = width % batchRegions; // in the case of uneven division
+        } 
     }
 
     public void _GenerateWorld()
