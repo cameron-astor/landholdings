@@ -10,12 +10,14 @@ public class GUIRoot : Control
 
     // Data
     Data worldData;
+    World world;
     Date dateData;
 
     public override void _Ready()
     {
         worldData = GetNode<Data>("../../World/Data");
-        dateData = worldData._GetSimDateTime();
+        world = GetNode<World>("../../World");
+        dateData = world._GetSimDateTime();
 
         date = GetNode<Label>("DateUI");
         FPS = GetNode<Label>("FPS");

@@ -19,8 +19,8 @@ script = ExtResource( 5 )
 
 [node name="Data" type="Node" parent="World"]
 script = ExtResource( 2 )
-width = 200
-height = 200
+width = 49
+height = 67
 
 [node name="Map" type="Node2D" parent="World"]
 script = ExtResource( 1 )

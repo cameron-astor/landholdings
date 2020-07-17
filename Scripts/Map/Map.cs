@@ -188,6 +188,16 @@ public class Map : Node2D
         }
     }
 
+    public void _BuildMapRegion(int xloc, bool addRemainder)
+    {
+
+    }
+
+    public void _UpdateColors()
+    {
+
+    }
+
     // Updates a single map tile
     private void _UpdateTile(int x, int y)
     {
