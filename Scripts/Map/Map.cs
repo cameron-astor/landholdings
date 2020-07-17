@@ -37,6 +37,7 @@ public class Map : Node2D
 
     // Map data
     private Sprite[,] map;
+    private Color[,] colors;
     private int width;
     private int height;
     
@@ -104,6 +105,7 @@ public class Map : Node2D
 
         // Init map
         map = new Sprite[width, height];
+        colors = new Color[width, height];
 
         // Init colormaps
         peasantColors = new Godot.Collections.Dictionary<int, Color>();
@@ -188,14 +190,32 @@ public class Map : Node2D
         }
     }
 
-    public void _BuildMapRegion(int xloc, bool addRemainder)
+    // Calculates the color values for the given map region based on current 
+    // data. Adds those values to the color array.
+    public void _BuildMapRegion(int xloc, int r, Vector2 regionDimensions)
     {
-
+        WorldTile current;
+        for (int x = xloc; x < (xloc + regionDimensions.x + r); x++) 
+        {
+            for (int y = 0; y < regionDimensions.y; y++)
+            {
+                current = world[x, y];
+                colors[x, y] = _CalculateColor(current);
+            }
+        }
     }
 
+    // Updates the whole map to match the colors in
+    // the colors[,] 2d array
     public void _UpdateColors()
     {
-
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                map[x, y].Modulate = colors[x, y];
+            }
+        }
     }
 
     // Updates a single map tile
@@ -205,27 +225,40 @@ public class Map : Node2D
         double alpha;
         // Map mode logic
         current = world[x, y];
+        map[x, y].Modulate = _CalculateColor(current);     
+    }
+
+    // Takes in a WorldTile and calculates the 
+    // color for that tile based on the currently
+    // selected map mode.
+    private Color _CalculateColor(WorldTile current)
+    {
+        Color c;
+        double alpha;
+
+        c = new Color(0, 0, 0); // default value
+
         if (mapModes[currentMapMode] == MAP_MODES.Terrain)
         {
             if (current.AgType == WorldTile.AGRICULTURE_TYPE.Arable)
-                map[x, y].Modulate = cArable;
+                c = cArable;
             if (current.AgType == WorldTile.AGRICULTURE_TYPE.Pasture)
-                map[x, y].Modulate = cPasture;
+                c = cPasture;
             if (current.AgType == WorldTile.AGRICULTURE_TYPE.Waste)
-                map[x, y].Modulate = cWaste;
+                c = cWaste;
         }
 
         if (mapModes[currentMapMode] == MAP_MODES.Population)
         {
             // Not implemented
-            map[x, y].Modulate = new Color(0, 0, 0, 0.0f);
+            c = new Color(0, 0, 0, 0.0f);
         }
 
         if (mapModes[currentMapMode] == MAP_MODES.Landholdings)
         {
             int id = current.holdingID;
             if (id != -1)
-                map[x, y].Modulate = holdingColors[id];
+                c = holdingColors[id];
         }
 
         // HIGHLY BROKEN PERFORMANCE CURRENTLY (two dictionary lookups??)
@@ -236,65 +269,16 @@ public class Map : Node2D
             int id = current.holdingID;
             if (id != -1) {
                 int peasant = peasantHoldings[id];
-                map[x, y].Modulate = peasantColors[peasant];
+                c = peasantColors[peasant];
             }
         }
 
         if (mapModes[currentMapMode] == MAP_MODES.Food)
         {
             alpha = (float) current.food / current.food + 5;
-            map[x, y].Modulate = new Color(0, 1, 0, (float) alpha);
+            c = new Color(0, 1, 0, (float) alpha);
         }        
+
+        return c;
     }
-
-    // EXPERIMENTAL Image-based map
-    // This one is a failure - slower than the Sprite based approach, probably
-    // because of the number of calculations required to fill in every pixel (this is probably
-    // handled much more efficiently by the Engine with Sprite)
-    Image mapImage;
-    ImageTexture mapImageTexture;
-    Sprite mapSprite;
-    private void _GenerateMapImage()
-    {
-        // Instantiate an empty image
-        mapImage = new Image();
-        mapImage.Create(width * 16, height * 16, false, Image.Format.Rgbaf);
-
-        mapImageTexture = new ImageTexture();
-
-        // test pixel setting
-        mapImage.Lock(); // allow access to data
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                _GenerateTileFromPixels(x, y);
-            }
-        }
-        mapImage.Unlock();
-
-        // set texture
-        mapImageTexture.CreateFromImage(mapImage);
-        
-        // setup sprite
-        mapSprite = new Sprite();
-        mapSprite.Texture = mapImageTexture;
-
-        // add to scene graph
-        this.AddChild(mapSprite);
-    }
-
-    private void _GenerateTileFromPixels(int x, int y)
-    {
-        int pixelCoordX = x * 16;
-        int pixelCoordY = y * 16;
-        for (int pixelx = 0; pixelx < pixelCoordX + 16; pixelx++)
-        {
-            for (int pixely = 0; pixely < pixelCoordY + 16; pixely++)
-            {
-                mapImage.SetPixel(pixelx, pixely, new Color(0, 0, 0, 0.75f));
-            }
-        }
-    }
-
 }

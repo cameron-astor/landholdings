@@ -7,11 +7,11 @@ using System;
 public class World : Node2D
 {
     
-    Data data; // Reference to game data
-    int width; // width of whole map
-    int height; // height of whole map
+    private Data data; // Reference to game data
+    private int width; // width of whole map
+    private int height; // height of whole map
 
-    Map map; // Reference to map
+    private Map map; // Reference to map
 
     // Simulation parameters
     [Export]
@@ -49,14 +49,20 @@ public class World : Node2D
             int xloc = ((int)regionDimensions.x * currentRegion);
             if ((currentRegion == batchRegions - 1) && remainder > 0)
                 remainderToAdd = remainder;
+
             GD.Print("Update region at " + xloc + " with remainder " + remainderToAdd);
+
             data._UpdateRegion(xloc, remainderToAdd, regionDimensions);
+            map._BuildMapRegion(xloc, remainderToAdd, regionDimensions);
+
             currentRegion++;
         }
 
-        if (timer == tickRate)
+        if (timer == tickRate) // every tick of in-game time
         {
             date._UpdateDate();
+            // render calculated map colors ***
+            map._UpdateColors();
 
             // start updates for the next tick
             currentRegion = 0;
