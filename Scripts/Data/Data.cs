@@ -57,6 +57,18 @@ public class Data : Node
 
     public override void _PhysicsProcess(float delta)
     {
+        if (timer == tickRate)
+        {
+            _UpdateSim();
+            timer = 0;
+        }
+        timer++;
+    }
+
+    private void _UpdateSim()
+    {
+        date._UpdateDate();
+
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
@@ -149,5 +161,10 @@ public class Data : Node
                 }
             }
         }
+    }
+
+    public Date _GetSimDateTime()
+    {
+        return date;
     }
 }
