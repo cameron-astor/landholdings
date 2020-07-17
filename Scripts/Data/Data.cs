@@ -35,7 +35,7 @@ public class Data : Node
 
     // Simulation parameters (should be factored into another class at some point idk)
     [Export]
-    private int tickRate = 5;
+    private int tickRate = 50;
     private int timer = 0;
     [Export]
     private int batchRegions = 5; // number of map subdivisions for updates
@@ -73,16 +73,17 @@ public class Data : Node
         if (currentRegion < batchRegions) 
         {
             bool addRemainder = false;
-            currentRegion++;
-            int xloc = (batchRegions * currentRegion);
-            if (currentRegion == batchRegions - 1)
+            int xloc = ((int)regionDimensions.x * currentRegion);
+            if ((currentRegion == batchRegions - 1) && remainder > 0)
                 addRemainder = true;
             GD.Print("Update region at " + xloc + " with remainder " + addRemainder);
             _UpdateRegion(xloc, addRemainder);
+            currentRegion++;
         }
 
         if (timer == tickRate)
         {
+            date._UpdateDate();
             currentRegion = 0;
             // _UpdateSim();
             timer = 0;
@@ -116,7 +117,7 @@ public class Data : Node
         {
             for (int y = 0; y < regionDimensions.y; y++)
             {
-                GD.Print(x);
+                // GD.Print(x);
             }
         }
 
