@@ -50,8 +50,6 @@ public class World : Node2D
             if ((currentRegion == batchRegions - 1) && remainder > 0)
                 remainderToAdd = remainder;
 
-            GD.Print("Update region at " + xloc + " with remainder " + remainderToAdd);
-
             data._UpdateRegion(xloc, remainderToAdd, regionDimensions);
             map._BuildMapRegion(xloc, remainderToAdd, regionDimensions);
 

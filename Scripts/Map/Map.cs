@@ -79,7 +79,7 @@ public class Map : Node2D
 
     public override void _PhysicsProcess(float delta)
     {
-        _UpdateMap();
+        // _UpdateMap();
     }
 
     private void _InitializeGraphics()
