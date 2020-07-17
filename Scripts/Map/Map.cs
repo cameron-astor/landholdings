@@ -74,10 +74,9 @@ public class Map : Node2D
         _InitializeGraphics();
         _InitializeData();
         _GenerateMap();
-        // _GenerateMapImage();
     }
 
-    public override void _Process(float delta)
+    public override void _PhysicsProcess(float delta)
     {
         _UpdateMap();
     }
@@ -100,6 +99,10 @@ public class Map : Node2D
         height = worldData.height;
         peasantHoldings = worldData.peasantHoldings;
 
+        // Connect update signal (EXPERIMENTAL)
+        // worldData.Connect("MapUpdateSignal", this, "_UpdateTile");
+
+        // Init map
         map = new Sprite[width, height];
 
         // Init colormaps
@@ -176,49 +179,62 @@ public class Map : Node2D
     // Updates the map tiles for the current mapmode
     private void _UpdateMap()
     {
-        WorldTile current;
-        double alpha;
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                // Map mode logic
-                current = world[x, y];
-                if (mapModes[currentMapMode] == MAP_MODES.Terrain)
-                {
-                    if (current.AgType == WorldTile.AGRICULTURE_TYPE.Arable)
-                        map[x, y].Modulate = cArable;
-                    if (current.AgType == WorldTile.AGRICULTURE_TYPE.Pasture)
-                        map[x, y].Modulate = cPasture;
-                    if (current.AgType == WorldTile.AGRICULTURE_TYPE.Waste)
-                        map[x, y].Modulate = cWaste;
-                }
-
-                if (mapModes[currentMapMode] == MAP_MODES.Population)
-                {
-                    // Not implemented
-                    map[x, y].Modulate = new Color(0, 0, 0, 0.0f);
-                }
-
-                if (mapModes[currentMapMode] == MAP_MODES.Landholdings)
-                {
-                    if (current.holdingID != -1)
-                        map[x, y].Modulate = holdingColors[current.holdingID];
-                }
-
-                if (mapModes[currentMapMode] == MAP_MODES.Peasants)
-                {
-                    if (current.holdingID != -1)
-                        map[x, y].Modulate = peasantColors[peasantHoldings[current.holdingID]];
-                }
-
-                if (mapModes[currentMapMode] == MAP_MODES.Food)
-                {
-                    alpha = (float) current.food / current.food + 5;
-                    map[x, y].Modulate = new Color(0, 1, 0, (float) alpha);
-                }
+                _UpdateTile(x, y);
             }
         }
+    }
+
+    // Updates a single map tile
+    private void _UpdateTile(int x, int y)
+    {
+        WorldTile current;
+        double alpha;
+        // Map mode logic
+        current = world[x, y];
+        if (mapModes[currentMapMode] == MAP_MODES.Terrain)
+        {
+            if (current.AgType == WorldTile.AGRICULTURE_TYPE.Arable)
+                map[x, y].Modulate = cArable;
+            if (current.AgType == WorldTile.AGRICULTURE_TYPE.Pasture)
+                map[x, y].Modulate = cPasture;
+            if (current.AgType == WorldTile.AGRICULTURE_TYPE.Waste)
+                map[x, y].Modulate = cWaste;
+        }
+
+        if (mapModes[currentMapMode] == MAP_MODES.Population)
+        {
+            // Not implemented
+            map[x, y].Modulate = new Color(0, 0, 0, 0.0f);
+        }
+
+        if (mapModes[currentMapMode] == MAP_MODES.Landholdings)
+        {
+            int id = current.holdingID;
+            if (id != -1)
+                map[x, y].Modulate = holdingColors[id];
+        }
+
+        // HIGHLY BROKEN PERFORMANCE CURRENTLY (two dictionary lookups??)
+        // Solution: maybe put color data in world tile somehow so there is no need
+        // for dictionary lookups.
+        if (mapModes[currentMapMode] == MAP_MODES.Peasants)
+        {
+            int id = current.holdingID;
+            if (id != -1) {
+                int peasant = peasantHoldings[id];
+                map[x, y].Modulate = peasantColors[peasant];
+            }
+        }
+
+        if (mapModes[currentMapMode] == MAP_MODES.Food)
+        {
+            alpha = (float) current.food / current.food + 5;
+            map[x, y].Modulate = new Color(0, 1, 0, (float) alpha);
+        }        
     }
 
     // EXPERIMENTAL Image-based map

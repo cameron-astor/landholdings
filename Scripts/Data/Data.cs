@@ -41,17 +41,31 @@ public class Data : Node
     private List<PeasantFamily> peasants;
     public Godot.Collections.Dictionary<int, int> peasantHoldings { get; set; }
 
+    // Signals
+    [Signal]
+    public delegate void MapUpdateSignal(int x, int y);
+
     public override void _Ready()
     {
+        // init containers, etc
         date = new Date();
         world = new WorldTile[width, height];
         peasantHoldings = new Godot.Collections.Dictionary<int, int>();
+
         _GenerateWorld();
     }
 
-    public override void _Process(float delta)
+    public override void _PhysicsProcess(float delta)
     {
-        
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                // Naive signals (EXPERIMENTAL)
+                //EmitSignal("MapUpdateSignal", x, y);
+
+            }
+        }
     }
 
     public void _GenerateWorld()
