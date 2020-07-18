@@ -18,10 +18,6 @@ _global_script_class_icons={
 config/name="Landholdings_C#"
 run/main_scene="res://Main.tscn"
 
-[display]
-
-window/vsync/use_vsync=false
-
 [input]
 
 mapmode_forward={

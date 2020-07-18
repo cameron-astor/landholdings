@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 /* TODO
 # Take user input code out of here and put in another node
@@ -7,7 +8,8 @@ using System;
 # Factor colors and mapmodes out into different file
 # to define them
 
-#
+# Use arrays to replace dictionaries for faster color lookups (the 
+  array index can be the id)
 */
 public class Map : Node2D
 {
@@ -29,7 +31,7 @@ public class Map : Node2D
 
     // Map modes
     private enum MAP_MODES {
-        Terrain, Population, Landholdings, Peasants, Food
+        Terrain = 0, Population = 1, Landholdings = 2, Peasants = 3, Food = 4
     }
     private int currentMapMode = 0;
     private MAP_MODES[] mapModes = {MAP_MODES.Terrain, MAP_MODES.Population, MAP_MODES.Landholdings, 
@@ -37,7 +39,9 @@ public class Map : Node2D
 
     // Map data
     private Sprite[,] map;
-    private Color[,] colors;
+    private Color[,] colors; // stores the colors to be rendered next tick
+    // experimental
+    private List<Color>[,] allColors; // will hold the color for every map mode at every tile.
     private int width;
     private int height;
     
@@ -79,7 +83,7 @@ public class Map : Node2D
 
     public override void _PhysicsProcess(float delta)
     {
-        // _UpdateMap();
+
     }
 
     private void _InitializeGraphics()
@@ -106,6 +110,22 @@ public class Map : Node2D
         // Init map
         map = new Sprite[width, height];
         colors = new Color[width, height];
+        allColors = new List<Color>[width, height];
+
+        for (int x = 0; x < width; x++) // init lists in allColors
+        {
+            for (int y = 0; y < height; y++)
+            {
+                List<Color> list = new List<Color>();
+                for (int i = 0; i < mapModes.Length; i++)
+                {
+                    Color c = new Color(255, 255, 255);
+                    list.Add(c);
+                }
+                allColors[x, y] = list;
+            }
+        }
+
 
         // Init colormaps
         peasantColors = new Godot.Collections.Dictionary<int, Color>();
@@ -124,30 +144,35 @@ public class Map : Node2D
                 sprite.Texture = baseTile;
                 sprite.Position = new Vector2((x * 16), (y * 16));
 
-                // Add holding data to color map
-                Color color = new Color((float) GD.RandRange(0, 1), 
-                                        (float) GD.RandRange(0, 1), 
-                                        (float) GD.RandRange(0, 1));
-                int holdingID = world[x, y].holdingID;
-                if (holdingID != -1)
-                {
-                    holdingColors[holdingID] = color;
-                }
-
-                // Add peasant data to color map
-                color = new Color((float) GD.RandRange(0, 1), 
-                                  (float) GD.RandRange(0, 1), 
-                                  (float) GD.RandRange(0, 1));
-			    holdingID = world[x, y].holdingID;
-			    if (holdingID != -1)
-                {
-                    int peasantID = peasantHoldings[world[x, y].holdingID];
-                    peasantColors[peasantID] = color;
-                }
+                _InitColorDicts(x, y);
 
                 map[x, y] = sprite;
                 this.AddChild(sprite);
             }
+        }
+    }
+
+    private void _InitColorDicts(int x, int y)
+    {
+        // Add holding data to color map
+        Color color = new Color((float) GD.RandRange(0, 1), 
+                                (float) GD.RandRange(0, 1), 
+                                (float) GD.RandRange(0, 1));
+        int holdingID = world[x, y].holdingID;
+        if (holdingID != -1)
+        {
+            holdingColors[holdingID] = color;
+        }
+
+        // Add peasant data to color map
+        color = new Color((float) GD.RandRange(0, 1), 
+                            (float) GD.RandRange(0, 1), 
+                            (float) GD.RandRange(0, 1));
+        holdingID = world[x, y].holdingID;
+        if (holdingID != -1)
+        {
+            int peasantID = peasantHoldings[world[x, y].holdingID];
+            peasantColors[peasantID] = color;
         }
     }
 
@@ -158,7 +183,8 @@ public class Map : Node2D
             Mathf.Round(GetGlobalMousePosition().x / 16),
             Mathf.Round(GetGlobalMousePosition().y / 16)
         );
-        if (coordinates.x < width && coordinates.y < height)
+        if (coordinates.x < width && coordinates.y < height
+            && coordinates.x > -1 && coordinates.y > -1)
         {
             WorldTile tile = world[(int) coordinates.x, (int) coordinates.y];
             tileSummary["1. Coordinates"] = coordinates.ToString();
@@ -200,7 +226,9 @@ public class Map : Node2D
             for (int y = 0; y < regionDimensions.y; y++)
             {
                 current = world[x, y];
-                colors[x, y] = _CalculateColor(current);
+                // colors[x, y] = _CalculateColor(current);
+                //experimental
+                _CalculateAllColors(current, x, y);
             }
         }
     }
@@ -218,11 +246,21 @@ public class Map : Node2D
         }
     }
 
+    public void _UpdateColorsAll()
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                map[x, y].Modulate = allColors[x, y][currentMapMode];
+            }
+        }        
+    }
+
     // Updates a single map tile
     private void _UpdateTile(int x, int y)
     {
         WorldTile current;
-        double alpha;
         // Map mode logic
         current = world[x, y];
         map[x, y].Modulate = _CalculateColor(current);     
@@ -280,5 +318,34 @@ public class Map : Node2D
         }        
 
         return c;
+    }
+
+    // experimental
+    private void _CalculateAllColors(WorldTile current, int x, int y)
+    {
+        double alpha;
+
+        if (current.AgType == WorldTile.AGRICULTURE_TYPE.Arable) // assign terrain colors
+            allColors[x, y][(int)MAP_MODES.Terrain] = cArable;
+        if (current.AgType == WorldTile.AGRICULTURE_TYPE.Pasture)
+            allColors[x, y][(int)MAP_MODES.Terrain] = cPasture;
+        if (current.AgType == WorldTile.AGRICULTURE_TYPE.Waste)
+            allColors[x, y][(int)MAP_MODES.Terrain] = cWaste;
+
+        // assign holding colors
+        int hid = current.holdingID;
+        if (hid != -1)
+            allColors[x, y][(int)MAP_MODES.Landholdings] = holdingColors[hid];
+
+        // assign peasant colors
+        if (hid != -1) {
+            int peasant = peasantHoldings[hid];
+            allColors[x, y][(int)MAP_MODES.Peasants] = peasantColors[peasant];
+        }                
+
+        // assign food colors
+        alpha = (float) current.food / current.food + 5;
+        allColors[x, y][(int)MAP_MODES.Food] = new Color(0, 1, 0, (float) alpha);
+
     }
 }

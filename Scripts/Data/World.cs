@@ -60,7 +60,8 @@ public class World : Node2D
         {
             date._UpdateDate();
             // render calculated map colors ***
-            map._UpdateColors();
+            //map._UpdateColors();
+            map._UpdateColorsAll();
 
             // start updates for the next tick
             currentRegion = 0;
