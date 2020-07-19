@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 
 /* TODO
+# Abstract the messy swapping colormaps code behind another class or something
+
 # Take user input code out of here and put in another node
 
 # Factor colors and mapmodes out into different file
@@ -35,13 +37,18 @@ public class Map : Node2D
     }
     private int currentMapMode = 0;
     private MAP_MODES[] mapModes = {MAP_MODES.Terrain, MAP_MODES.Population, MAP_MODES.Landholdings, 
-				                MAP_MODES.Peasants, MAP_MODES.Food};
+				                    MAP_MODES.Peasants, MAP_MODES.Food};
 
     // Map data
     private Sprite[,] map;
-    private Color[,] colors; // stores the colors to be rendered next tick
+    // private Color[,] colors; // stores the colors to be rendered next tick
     // experimental
     private List<Color>[,] allColors; // will hold the color for every map mode at every tile.
+    private List<Color>[,] allColorsCopy; // A copy of allColors to allow for saving calculated 
+                                          // map colors between ticks (for switching mapmodes, etc.)
+    private List<Color>[,] currentColorMap; // Reference to whichever color map is the one being updated
+    private List<Color>[,] displayColorMap; // Reference to whichever color map is the current one for this tick
+
     private int width;
     private int height;
     
@@ -71,6 +78,7 @@ public class Map : Node2D
                 currentMapMode++;
             }
             GD.Print("Switch mapmode to " + mapModes[currentMapMode].ToString());
+            _UpdateColorsAll(displayColorMap);
         }
     }
 
@@ -109,20 +117,25 @@ public class Map : Node2D
 
         // Init map
         map = new Sprite[width, height];
-        colors = new Color[width, height];
+        //colors = new Color[width, height];
         allColors = new List<Color>[width, height];
+        allColorsCopy = new List<Color>[width, height];
 
-        for (int x = 0; x < width; x++) // init lists in allColors
+        for (int x = 0; x < width; x++) // init lists in allColors and copy
         {
             for (int y = 0; y < height; y++)
             {
                 List<Color> list = new List<Color>();
+                List<Color> list2 = new List<Color>();
                 for (int i = 0; i < mapModes.Length; i++)
                 {
                     Color c = new Color(255, 255, 255);
+                    Color c2 = new Color(255, 255, 255);
                     list.Add(c);
+                    list2.Add(c2);
                 }
                 allColors[x, y] = list;
+                allColorsCopy[x, y] = list2;
             }
         }
 
@@ -150,6 +163,11 @@ public class Map : Node2D
                 this.AddChild(sprite);
             }
         }
+
+        currentColorMap = allColors;
+        displayColorMap = allColorsCopy;
+        _BuildWholeMap();
+        _UpdateColorsAll(currentColorMap);
     }
 
     private void _InitColorDicts(int x, int y)
@@ -220,6 +238,13 @@ public class Map : Node2D
     // data. Adds those values to the color array.
     public void _BuildMapRegion(int xloc, int r, Vector2 regionDimensions)
     {
+        if (xloc == 0) {
+            // if it's a new tick
+            List<Color>[,] temp = displayColorMap; // swap colormaps 
+            displayColorMap = currentColorMap;
+            currentColorMap = temp; 
+        }
+
         WorldTile current;
         for (int x = xloc; x < (xloc + regionDimensions.x + r); x++) 
         {
@@ -233,6 +258,21 @@ public class Map : Node2D
         }
     }
 
+    // Calculates color values for the whole map based on current data.
+    // Adds those values to the color array.
+    public void _BuildWholeMap()
+    {
+        WorldTile current;
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                current = world[x, y];
+                _CalculateAllColors(current, x, y);
+            }
+        }
+    }
+
     // Updates the whole map to match the colors in
     // the colors[,] 2d array
     public void _UpdateColors()
@@ -241,20 +281,27 @@ public class Map : Node2D
         {
             for (int y = 0; y < height; y++)
             {
-                map[x, y].Modulate = colors[x, y];
+                // map[x, y].Modulate = colors[x, y];
             }
         }
     }
 
-    public void _UpdateColorsAll()
+    // Updates the whole map's colors based on the current color map
+    // and the current map mode
+    private void _UpdateColorsAll(List<Color>[,] colormap)
     {
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                map[x, y].Modulate = allColors[x, y][currentMapMode];
+                map[x, y].Modulate = colormap[x, y][currentMapMode];
             }
         }        
+    }
+
+    public void _UpdateColorsAll()
+    {
+        _UpdateColorsAll(currentColorMap);
     }
 
     // Updates a single map tile
@@ -326,26 +373,26 @@ public class Map : Node2D
         double alpha;
 
         if (current.AgType == WorldTile.AGRICULTURE_TYPE.Arable) // assign terrain colors
-            allColors[x, y][(int)MAP_MODES.Terrain] = cArable;
+            currentColorMap[x, y][(int)MAP_MODES.Terrain] = cArable;
         if (current.AgType == WorldTile.AGRICULTURE_TYPE.Pasture)
-            allColors[x, y][(int)MAP_MODES.Terrain] = cPasture;
+            currentColorMap[x, y][(int)MAP_MODES.Terrain] = cPasture;
         if (current.AgType == WorldTile.AGRICULTURE_TYPE.Waste)
-            allColors[x, y][(int)MAP_MODES.Terrain] = cWaste;
+            currentColorMap[x, y][(int)MAP_MODES.Terrain] = cWaste;
 
         // assign holding colors
         int hid = current.holdingID;
         if (hid != -1)
-            allColors[x, y][(int)MAP_MODES.Landholdings] = holdingColors[hid];
+            currentColorMap[x, y][(int)MAP_MODES.Landholdings] = holdingColors[hid];
 
         // assign peasant colors
         if (hid != -1) {
             int peasant = peasantHoldings[hid];
-            allColors[x, y][(int)MAP_MODES.Peasants] = peasantColors[peasant];
+            currentColorMap[x, y][(int)MAP_MODES.Peasants] = peasantColors[peasant];
         }                
 
         // assign food colors
         alpha = (float) current.food / current.food + 5;
-        allColors[x, y][(int)MAP_MODES.Food] = new Color(0, 1, 0, (float) alpha);
+        currentColorMap[x, y][(int)MAP_MODES.Food] = new Color(0, 1, 0, (float) alpha);
 
     }
 }
