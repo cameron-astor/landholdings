@@ -4,6 +4,8 @@ using System;
 /* The World manages the simulation, such as splitting the map up for updates
    and holding various logistical data. 
 */
+
+// TODO: date is not aligned (displays the date being processed, not being displayed)
 public class World : Node2D
 {
     
@@ -50,7 +52,7 @@ public class World : Node2D
             if ((currentRegion == batchRegions - 1) && remainder > 0)
                 remainderToAdd = remainder;
 
-            data._UpdateRegion(xloc, remainderToAdd, regionDimensions);
+            data._UpdateRegion(xloc, remainderToAdd, regionDimensions, date);
             map._BuildMapRegion(xloc, remainderToAdd, regionDimensions);
 
             currentRegion++;
@@ -60,7 +62,6 @@ public class World : Node2D
         {
             date._UpdateDate();
             // render calculated map colors ***
-            //map._UpdateColors();
             map._UpdateColorsAll();
 
             // start updates for the next tick

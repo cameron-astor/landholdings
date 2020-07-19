@@ -63,8 +63,7 @@ public class Data : Node
         {
             for (int y = 0; y < height; y++)
             {
-                // Naive signals (EXPERIMENTAL)
-                //EmitSignal("MapUpdateSignal", x, y);
+
             }
         }
     }
@@ -72,14 +71,14 @@ public class Data : Node
     // Takes in the upper left corner x value of the region to be updated,
     // A remainder (in the case of uneven map division),
     // and the dimensions of the region to be updated
-    public void _UpdateRegion(int xloc, int r, Vector2 regionDimensions)
+    public void _UpdateRegion(int xloc, int r, Vector2 regionDimensions, Date date)
     {
 
         for (int x = xloc; x < (xloc + regionDimensions.x + r); x++) 
         {
             for (int y = 0; y < regionDimensions.y; y++)
             {
-                // Run sim here
+                _UpdateEcology(world[x, y], date);
             }
         }
 
@@ -168,4 +167,144 @@ public class Data : Node
         }
     }
 
+    // SIMULATION FUNCTIONS (move to separate file)
+    public void _UpdateEcology(WorldTile t, Date date)
+    {
+	    int rand = 0;
+	    if (t.AgType == WorldTile.AGRICULTURE_TYPE.Arable)
+        {
+            if (date.month >= 11 || date.month <= 2) // winter
+                t.food = 0;
+            if (date.month == 3) // march
+                rand = (int) GD.Randi() % 3;
+                if (rand == 1)
+                    t.food = 1;
+            if (date.month == 4) // april
+            {
+                rand = (int) GD.Randi() % 3;
+                switch (rand)
+                {
+                    case 0:
+                        t.food = 1;
+                        break;
+                    case 1:
+                        t.food = 2;
+                        break;
+                    case 2:
+                        t.food = 2;
+                        break;
+                }
+            }
+            if (date.month == 5) // may
+            {
+                rand = (int) GD.Randi() % 4;
+                switch (rand)
+                {
+                    case 0:
+                        t.food = 2;
+                        break;
+                    case 1:
+                        t.food = 2;
+                        break;
+                    case 2:
+                        t.food = 3;
+                        break;
+                    case 3:
+                        t.food = 5;
+                        break;
+                }
+            }  
+            if (date.month == 6) // june
+            {
+                rand = (int) GD.Randi() % 3;
+                switch (rand)
+                {
+                    case 0:
+                        t.food = 3;
+                        break;
+                    case 1:
+                        t.food = 4;
+                        break;
+                    case 2:
+                        t.food = 5;
+                        break;
+                }
+            } 
+            if (date.month == 7) // july
+            {
+                rand = (int) GD.Randi() % 3;
+                switch (rand)
+                {
+                    case 0:
+                        t.food = 4;
+                        break;
+                    case 1:
+                        t.food = 4;
+                        break;
+                    case 2:
+                        t.food = 5;
+                        break;
+                }
+            } 
+            if (date.month == 8) // August
+            {
+                rand = (int) GD.Randi() % 4;
+                switch (rand)
+                {
+                    case 0:
+                        t.food = 2;
+                        break;
+                    case 1:
+                        t.food = 2;
+                        break;
+                    case 2:
+                        t.food = 3;
+                        break;
+                    case 3:
+                        t.food = 4;
+                        break;
+                }
+            }  
+            if (date.month == 9) // sept
+            {
+                rand = (int) GD.Randi() % 4;
+                switch (rand)
+                {
+                    case 0:
+                        t.food = 1;
+                        break;
+                    case 1:
+                        t.food = 1;
+                        break;
+                    case 2:
+                        t.food = 2;
+                        break;
+                    case 3:
+                        t.food = 2;
+                        break;
+                }
+            }  
+            if (date.month == 10) // oct
+            {
+                rand = (int) GD.Randi() % 4;
+                switch (rand)
+                {
+                    case 0:
+                        t.food = 0;
+                        break;
+                    case 1:
+                        t.food = 1;
+                        break;
+                    case 2:
+                        t.food = 1;
+                        break;
+                    case 3:
+                        t.food = 1;
+                        break;
+                }
+            }  
+        } else {
+            t.food = 0;
+        }
+    }
 }

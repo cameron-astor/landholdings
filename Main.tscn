@@ -16,6 +16,7 @@ script = ExtResource( 3 )
 
 [node name="World" type="Node2D" parent="."]
 script = ExtResource( 5 )
+tickRate = 20
 
 [node name="Data" type="Node" parent="World"]
 script = ExtResource( 2 )

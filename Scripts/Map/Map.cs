@@ -129,8 +129,8 @@ public class Map : Node2D
                 List<Color> list2 = new List<Color>();
                 for (int i = 0; i < mapModes.Length; i++)
                 {
-                    Color c = new Color(255, 255, 255);
-                    Color c2 = new Color(255, 255, 255);
+                    Color c = new Color(0, 0, 0);
+                    Color c2 = new Color(0, 0, 0);
                     list.Add(c);
                     list2.Add(c2);
                 }
@@ -391,7 +391,7 @@ public class Map : Node2D
         }                
 
         // assign food colors
-        alpha = (float) current.food / current.food + 5;
+        alpha = current.food / (current.food + 5);
         currentColorMap[x, y][(int)MAP_MODES.Food] = new Color(0, 1, 0, (float) alpha);
 
     }
