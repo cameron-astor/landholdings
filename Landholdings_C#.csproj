@@ -66,6 +66,7 @@
     <Compile Include="Scripts\Data\WorldTile.cs" />
     <Compile Include="Scripts\GUI\GUIRoot.cs" />
     <Compile Include="Scripts\Map\Map.cs" />
+    <Compile Include="Scripts\Data\Sim.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

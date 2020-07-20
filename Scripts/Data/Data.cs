@@ -3,16 +3,16 @@ using System;
 using System.Collections.Generic;
 
 /* TODO 
-# Consider how to logically split this up
-  Separate simulation logistics from the game data?
-
-# Getting data from the world onto the map efficiently is a problem...
+        // Possible optimization: on world generation
+        // store individual lists of different types
+        // of tiles?
 */
 
 /* 
-    Contains the data that makes up the simulation and exposes
-    functions to update it (i.e. the functions that make up
-    the activity of the world)
+    Contains the data that makes up the state of the world.
+    Generates world at start.
+    Exposes functions to update the whole state (see Sim.cs for individual
+    simulation functions).
 */
 public class Data : Node
 {
@@ -38,23 +38,17 @@ public class Data : Node
     private List<PeasantFamily> peasants;
     public Godot.Collections.Dictionary<int, int> peasantHoldings { get; set; }
 
-    // Signals
+    // Signals (experimental)
     [Signal]
     public delegate void MapUpdateSignal(int x, int y);
 
     public override void _Ready()
     {
         // init containers, etc
-        
         world = new WorldTile[width, height];
         peasantHoldings = new Godot.Collections.Dictionary<int, int>();
 
         _GenerateWorld();
-    }
-
-    public override void _PhysicsProcess(float delta)
-    {
-
     }
 
     private void _UpdateSim()
@@ -78,12 +72,13 @@ public class Data : Node
         {
             for (int y = 0; y < regionDimensions.y; y++)
             {
-                _UpdateEcology(world[x, y], date);
+                Sim._UpdateEcology(world[x, y], date);
             }
         }
 
     }
 
+    // Runs all generation functions
     public void _GenerateWorld()
     {
         _GenerateTerrain();
@@ -116,6 +111,7 @@ public class Data : Node
         }
     }
 
+    // Returns a terrain type based on a perlin noise value
     private WorldTile.AGRICULTURE_TYPE _GetNoiseTile(float noise)
     {
         if (noise < 0.0)
@@ -125,6 +121,7 @@ public class Data : Node
         return WorldTile.AGRICULTURE_TYPE.Waste;
     }
 
+    // Generates land holdings
     public void _GenerateHoldings()
     {
         int holdingID = 0;
@@ -143,14 +140,13 @@ public class Data : Node
         }
     }
 
+    // Generates peasant families
     public void _GeneratePeasants()
     {
         WorldTile current;
         PeasantFamily peasant;
         int id = 0;
-        // Possible optimization: on world generation
-        // store individual lists of different types
-        // of tiles?
+
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++)
             {
@@ -167,144 +163,4 @@ public class Data : Node
         }
     }
 
-    // SIMULATION FUNCTIONS (move to separate file)
-    public void _UpdateEcology(WorldTile t, Date date)
-    {
-	    int rand = 0;
-	    if (t.AgType == WorldTile.AGRICULTURE_TYPE.Arable)
-        {
-            if (date.month >= 11 || date.month <= 2) // winter
-                t.food = 0;
-            if (date.month == 3) // march
-                rand = (int) GD.Randi() % 3;
-                if (rand == 1)
-                    t.food = 1;
-            if (date.month == 4) // april
-            {
-                rand = (int) GD.Randi() % 3;
-                switch (rand)
-                {
-                    case 0:
-                        t.food = 1;
-                        break;
-                    case 1:
-                        t.food = 2;
-                        break;
-                    case 2:
-                        t.food = 2;
-                        break;
-                }
-            }
-            if (date.month == 5) // may
-            {
-                rand = (int) GD.Randi() % 4;
-                switch (rand)
-                {
-                    case 0:
-                        t.food = 2;
-                        break;
-                    case 1:
-                        t.food = 2;
-                        break;
-                    case 2:
-                        t.food = 3;
-                        break;
-                    case 3:
-                        t.food = 5;
-                        break;
-                }
-            }  
-            if (date.month == 6) // june
-            {
-                rand = (int) GD.Randi() % 3;
-                switch (rand)
-                {
-                    case 0:
-                        t.food = 3;
-                        break;
-                    case 1:
-                        t.food = 4;
-                        break;
-                    case 2:
-                        t.food = 5;
-                        break;
-                }
-            } 
-            if (date.month == 7) // july
-            {
-                rand = (int) GD.Randi() % 3;
-                switch (rand)
-                {
-                    case 0:
-                        t.food = 4;
-                        break;
-                    case 1:
-                        t.food = 4;
-                        break;
-                    case 2:
-                        t.food = 5;
-                        break;
-                }
-            } 
-            if (date.month == 8) // August
-            {
-                rand = (int) GD.Randi() % 4;
-                switch (rand)
-                {
-                    case 0:
-                        t.food = 2;
-                        break;
-                    case 1:
-                        t.food = 2;
-                        break;
-                    case 2:
-                        t.food = 3;
-                        break;
-                    case 3:
-                        t.food = 4;
-                        break;
-                }
-            }  
-            if (date.month == 9) // sept
-            {
-                rand = (int) GD.Randi() % 4;
-                switch (rand)
-                {
-                    case 0:
-                        t.food = 1;
-                        break;
-                    case 1:
-                        t.food = 1;
-                        break;
-                    case 2:
-                        t.food = 2;
-                        break;
-                    case 3:
-                        t.food = 2;
-                        break;
-                }
-            }  
-            if (date.month == 10) // oct
-            {
-                rand = (int) GD.Randi() % 4;
-                switch (rand)
-                {
-                    case 0:
-                        t.food = 0;
-                        break;
-                    case 1:
-                        t.food = 1;
-                        break;
-                    case 2:
-                        t.food = 1;
-                        break;
-                    case 3:
-                        t.food = 1;
-                        break;
-                }
-            }  
-        } else {
-            t.food = 0;
-        }
-    }
 }
