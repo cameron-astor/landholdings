@@ -34,9 +34,9 @@ public class Data : Node
     private float persistence = 0.75f;
 
     // Data containers
-    public WorldTile[,] world { get; set; }
-    private List<PeasantFamily> peasants;
-    public Godot.Collections.Dictionary<int, int> peasantHoldings { get; set; }
+    public WorldTile[,] world { get; private set; }
+    
+    // public Godot.Collections.Dictionary<int, int> peasantHoldings { get; set; }
 
     // Signals (experimental)
     [Signal]
@@ -46,7 +46,7 @@ public class Data : Node
     {
         // init containers, etc
         world = new WorldTile[width, height];
-        peasantHoldings = new Godot.Collections.Dictionary<int, int>();
+        // peasantHoldings = new Godot.Collections.Dictionary<int, int>();
 
         _GenerateWorld();
     }
@@ -124,18 +124,23 @@ public class Data : Node
     // Generates land holdings
     public void _GenerateHoldings()
     {
-        int holdingID = 0;
+        int id = 0;
         WorldTile t;
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
                 t = world[x, y];
+                t.holding = new Holding();
                 if (t.AgType == WorldTile.AGRICULTURE_TYPE.Arable) 
                 {
-                    t.holdingID = holdingID;
-                    holdingID++;
+                    t.holding.type = Holding.HOLDING_TYPE.Freehold;
+                    t.holding.holdingID = id;
+                } else {
+                    t.holding.type = Holding.HOLDING_TYPE.None;
+                    t.holding.holdingID = id;
                 }
+                id++;
             }
         }
     }
@@ -151,13 +156,17 @@ public class Data : Node
             for (int y = 0; y < height; y++)
             {
                 current = world[x, y];
-                if (current.holdingID != -1)
+                if (current.holding.type != Holding.HOLDING_TYPE.None)
                 {
                     peasant = new PeasantFamily();
                     peasant.size = ((int) GD.Randi() % 10) + 1;
                     peasant.id = id;
-                    peasantHoldings[current.holdingID] = peasant.id;
+                    current.holding.owner = peasant;
+
                     id++;
+
+                    // deprecated
+                    // peasantHoldings[current.holding.holdingID] = peasant.id;
                 }
             }
         }

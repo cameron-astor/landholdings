@@ -19,7 +19,7 @@ public class Map : Node2D
     // References to world data
     private Data worldData;
     private WorldTile[,] world;
-    private Godot.Collections.Dictionary<int, int> peasantHoldings;
+    // private Godot.Collections.Dictionary<int, int> peasantHoldings;
 
     // Terrain colors
     private Color cArable;
@@ -41,8 +41,6 @@ public class Map : Node2D
 
     // Map data
     private Sprite[,] map;
-    // private Color[,] colors; // stores the colors to be rendered next tick
-    // experimental
     private List<Color>[,] allColors; // will hold the color for every map mode at every tile.
     private List<Color>[,] allColorsCopy; // A copy of allColors to allow for saving calculated 
                                           // map colors between ticks (for switching mapmodes, etc.)
@@ -110,14 +108,13 @@ public class Map : Node2D
         world = worldData.world;
         width = worldData.width;
         height = worldData.height;
-        peasantHoldings = worldData.peasantHoldings;
+        // peasantHoldings = worldData.peasantHoldings;
 
         // Connect update signal (EXPERIMENTAL)
         // worldData.Connect("MapUpdateSignal", this, "_UpdateTile");
 
         // Init map
         map = new Sprite[width, height];
-        //colors = new Color[width, height];
         allColors = new List<Color>[width, height];
         allColorsCopy = new List<Color>[width, height];
 
@@ -176,20 +173,18 @@ public class Map : Node2D
         Color color = new Color((float) GD.RandRange(0, 1), 
                                 (float) GD.RandRange(0, 1), 
                                 (float) GD.RandRange(0, 1));
-        int holdingID = world[x, y].holdingID;
-        if (holdingID != -1)
-        {
-            holdingColors[holdingID] = color;
-        }
+        int holdingID;
+        holdingID = world[x, y].holding.holdingID;
+        holdingColors[holdingID] = color;
 
         // Add peasant data to color map
         color = new Color((float) GD.RandRange(0, 1), 
                             (float) GD.RandRange(0, 1), 
                             (float) GD.RandRange(0, 1));
-        holdingID = world[x, y].holdingID;
-        if (holdingID != -1)
+ 
+        if (world[x, y].holding.owner != null)
         {
-            int peasantID = peasantHoldings[world[x, y].holdingID];
+            int peasantID = world[x, y].holding.owner.id;
             peasantColors[peasantID] = color;
         }
     }
@@ -207,10 +202,10 @@ public class Map : Node2D
             WorldTile tile = world[(int) coordinates.x, (int) coordinates.y];
             tileSummary["1. Coordinates"] = coordinates.ToString();
             tileSummary["2. Agriculture"] = tile.AgType.ToString();
-            tileSummary["3. Holding ID"] = tile.holdingID.ToString();
-            if (tile.holdingID != -1) 
+            tileSummary["3. Holding ID"] = tile.holding.holdingID.ToString();
+            if (tile.holding.owner != null) 
             {
-                tileSummary["5. Peasant Family ID"] = peasantHoldings[tile.holdingID].ToString();
+                tileSummary["5. Peasant Family ID"] = tile.holding.owner.id.ToString();
             }
             else {
                 tileSummary["5. Peasant Family ID"] = "No peasants";
@@ -341,7 +336,7 @@ public class Map : Node2D
 
         if (mapModes[currentMapMode] == MAP_MODES.Landholdings)
         {
-            int id = current.holdingID;
+            int id = current.holding.holdingID;
             if (id != -1)
                 c = holdingColors[id];
         }
@@ -351,9 +346,9 @@ public class Map : Node2D
         // for dictionary lookups.
         if (mapModes[currentMapMode] == MAP_MODES.Peasants)
         {
-            int id = current.holdingID;
-            if (id != -1) {
-                int peasant = peasantHoldings[id];
+            int id = current.holding.holdingID;
+            if (current.holding.owner != null) {
+                int peasant = current.holding.owner.id;
                 c = peasantColors[peasant];
             }
         }
@@ -380,14 +375,21 @@ public class Map : Node2D
             currentColorMap[x, y][(int)MAP_MODES.Terrain] = cWaste;
 
         // assign holding colors
-        int hid = current.holdingID;
-        if (hid != -1)
+        int hid = 0;
+        if (current.holding != null && current.holding.type != Holding.HOLDING_TYPE.None)
+        {
+            hid = current.holding.holdingID;   
             currentColorMap[x, y][(int)MAP_MODES.Landholdings] = holdingColors[hid];
+        }
 
         // assign peasant colors
-        if (hid != -1) {
-            int peasant = peasantHoldings[hid];
-            currentColorMap[x, y][(int)MAP_MODES.Peasants] = peasantColors[peasant];
+        if (current.holding != null) 
+        {
+            if (current.holding.owner != null)
+            {
+                int peasant = current.holding.owner.id;
+                currentColorMap[x, y][(int)MAP_MODES.Peasants] = peasantColors[peasant];
+            }
         }                
 
         // assign food colors

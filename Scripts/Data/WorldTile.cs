@@ -16,12 +16,7 @@ public class WorldTile : Node
     private int pop = 0;
 
     // Property
-    public enum PROPERTY_TYPE {
-        None, Freehold
-    }
-
-    private PROPERTY_TYPE propertyType = PROPERTY_TYPE.Freehold;
-    public int holdingID { get; set; } = -1;
+    public Holding holding { get; set; }
 
     private void _UpdateEcology()
     {

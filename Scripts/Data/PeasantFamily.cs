@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public class PeasantFamily : Node
+public class PeasantFamily
 {
 
     public int id  { get; set; } = -1;
