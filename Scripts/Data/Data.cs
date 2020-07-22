@@ -8,6 +8,9 @@ using System.Collections.Generic;
       of tiles?
 
     - Refactor into multiple files (too much sim update logistics in here still)
+      In particular, we're going to need a quick way to iterate and swap out simulation functions, etc.
+      So those should definitely be abstracted from the perspective of this file (so we can plug in a single
+      function call to swap out a sim, rather than rewrite it all here (and thus not get to save them)).
 */
 
 /* 
