@@ -108,10 +108,6 @@ public class Map : Node2D
         world = worldData.world;
         width = worldData.width;
         height = worldData.height;
-        // peasantHoldings = worldData.peasantHoldings;
-
-        // Connect update signal (EXPERIMENTAL)
-        // worldData.Connect("MapUpdateSignal", this, "_UpdateTile");
 
         // Init map
         map = new Sprite[width, height];
@@ -246,8 +242,6 @@ public class Map : Node2D
             for (int y = 0; y < regionDimensions.y; y++)
             {
                 current = world[x, y];
-                // colors[x, y] = _CalculateColor(current);
-                //experimental
                 _CalculateAllColors(current, x, y);
             }
         }
@@ -341,9 +335,6 @@ public class Map : Node2D
                 c = holdingColors[id];
         }
 
-        // HIGHLY BROKEN PERFORMANCE CURRENTLY (two dictionary lookups??)
-        // Solution: maybe put color data in world tile somehow so there is no need
-        // for dictionary lookups.
         if (mapModes[currentMapMode] == MAP_MODES.Peasants)
         {
             int id = current.holding.holdingID;
@@ -362,7 +353,6 @@ public class Map : Node2D
         return c;
     }
 
-    // experimental
     private void _CalculateAllColors(WorldTile current, int x, int y)
     {
         double alpha;

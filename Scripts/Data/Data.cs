@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 
 /* TODO 
-        // Possible optimization: on world generation
-        // store individual lists of different types
-        // of tiles?
+    - Possible optimization: on world generation
+      store individual lists of different types
+      of tiles?
+
+    - Refactor into multiple files (too much sim update logistics in here still)
 */
 
 /* 
@@ -35,31 +37,25 @@ public class Data : Node
 
     // Data containers
     public WorldTile[,] world { get; private set; }
-    
-    // public Godot.Collections.Dictionary<int, int> peasantHoldings { get; set; }
-
-    // Signals (experimental)
-    [Signal]
-    public delegate void MapUpdateSignal(int x, int y);
 
     public override void _Ready()
     {
         // init containers, etc
         world = new WorldTile[width, height];
-        // peasantHoldings = new Godot.Collections.Dictionary<int, int>();
+        updatedPeasants = new HashSet<PeasantFamily>();
 
         _GenerateWorld();
     }
 
-    private void _UpdateSim()
-    {
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
+    // Sets which keep track of what higher level entities have been updated in the 
+    // current update so far. (move into another file pls)
+    private HashSet<PeasantFamily> updatedPeasants;
 
-            }
-        }
+    // Intended to be called when each full update is complete.
+    // Resets update logistics (like sets of entities)
+    public void _FinishUpdate()
+    {
+        updatedPeasants.Clear();
     }
 
     // Takes in the upper left corner x value of the region to be updated,
@@ -67,12 +63,33 @@ public class Data : Node
     // and the dimensions of the region to be updated
     public void _UpdateRegion(int xloc, int r, Vector2 regionDimensions, Date date)
     {
-
+        WorldTile current;
         for (int x = xloc; x < (xloc + regionDimensions.x + r); x++) 
         {
             for (int y = 0; y < regionDimensions.y; y++)
             {
-                Sim._UpdateEcology(world[x, y], date);
+                current = world[x, y];
+                // update based on peasants
+                PeasantFamily p = current.holding.owner;
+                if (p != null) // if the tile is owned
+                {
+                    if (!updatedPeasants.Contains(p)) // and the owner has not yet been updated
+                    {
+                        foreach (Holding h in p.holdings)
+                        {
+                            foreach(WorldTile land in h.constituentTiles)
+                            {
+                                Sim._UpdateEcology(land, date); // perform tile updates for all tiles owned by this peasant
+                            }
+                        }
+
+                        // perform peasant-wide operations here
+
+                        updatedPeasants.Add(p); // mark as updated
+                    }
+                } else { // if the tile is not owned
+                    Sim._UpdateEcology(current, date);
+                }
             }
         }
 
@@ -121,7 +138,7 @@ public class Data : Node
         return WorldTile.AGRICULTURE_TYPE.Waste;
     }
 
-    // Generates land holdings
+    // Generates land holdings, one per tile
     public void _GenerateHoldings()
     {
         int id = 0;
@@ -131,7 +148,9 @@ public class Data : Node
             for (int y = 0; y < height; y++)
             {
                 t = world[x, y];
-                t.holding = new Holding();
+                t.holding = new Holding(); // register holding with tile
+                t.holding.constituentTiles.Add(t); // register tile with holding
+
                 if (t.AgType == WorldTile.AGRICULTURE_TYPE.Arable) 
                 {
                     t.holding.type = Holding.HOLDING_TYPE.Freehold;
@@ -140,12 +159,13 @@ public class Data : Node
                     t.holding.type = Holding.HOLDING_TYPE.None;
                     t.holding.holdingID = id;
                 }
+
                 id++;
             }
         }
     }
 
-    // Generates peasant families
+    // Generates peasant families. Puts one peasant family in each single-tile holding
     public void _GeneratePeasants()
     {
         WorldTile current;
@@ -158,15 +178,14 @@ public class Data : Node
                 current = world[x, y];
                 if (current.holding.type != Holding.HOLDING_TYPE.None)
                 {
+                    // init peasant
                     peasant = new PeasantFamily();
                     peasant.size = ((int) GD.Randi() % 10) + 1;
                     peasant.id = id;
-                    current.holding.owner = peasant;
+                    peasant.holdings.Add(current.holding); // register holding with peasant
+                    current.holding.owner = peasant; // register peasant with holding
 
                     id++;
-
-                    // deprecated
-                    // peasantHoldings[current.holding.holdingID] = peasant.id;
                 }
             }
         }

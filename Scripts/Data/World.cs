@@ -64,6 +64,9 @@ public class World : Node2D
             // render calculated map colors ***
             map._UpdateColorsAll();
 
+            // Prepare data for next update
+            data._FinishUpdate();
+
             // start updates for the next tick
             currentRegion = 0;
 
