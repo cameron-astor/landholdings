@@ -6,6 +6,7 @@ using System;
 # Boundaries
 # Smooth slowdown for mouse movement at borders
 # Click and drag
+# Keyboard controls for zooming
 */
 
 public class Camera : Camera2D
@@ -22,31 +23,8 @@ public class Camera : Camera2D
     public override void _PhysicsProcess(float delta)
     {
         _CalculateZoom();
-        // _GetMouseInput();
         _GetKeyboardInput();
         _CalculateBorderMouse();
-    }
-
-    // Intended to use the input map, currently broken 
-    // (perhaps input map doesnt work with mouse wheel?)
-    public void _GetMouseInput()
-    {
-        if (Input.IsActionPressed("zoom_in"))
-        {
-            if (this.Zoom.x > 0.5 && this.Zoom.y > 0.5)
-            {
-                zoom = ZOOM.In;
-                zoomCounter = 5;
-            }
-        }
-        if (Input.IsActionPressed("zoom_out"))
-        {
-            if (this.Zoom.x < 1.3 && this.Zoom.y < 1.3)
-            {
-                zoom = ZOOM.Out;
-                zoomCounter = 5;
-            }
-        }
     }
 
     // Mouse wheel detection

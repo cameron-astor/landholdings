@@ -4,15 +4,12 @@ using System;
 /* The World manages the simulation, such as splitting the map up for updates
    and holding various logistical data. 
 */
-
-// TODO: date is not aligned (displays the date being processed, not being displayed)
 public class World : Node2D
 {
     
     private Data data; // Reference to game data
     private int width; // width of whole map
     private int height; // height of whole map
-
     private Map map; // Reference to map
 
     // Simulation parameters
@@ -27,7 +24,7 @@ public class World : Node2D
     private int xlocation = 0; // the current upper left corner of the region
 
     // In-game date
-    private Date date;
+    public Date date { get; private set; }
 
     public override void _Ready()
     {
@@ -45,6 +42,18 @@ public class World : Node2D
 
     public override void _PhysicsProcess(float delta)
     {
+        _Update();
+
+        if (timer == tickRate) // every tick of in-game time
+        {
+            _TickUpdate();
+        }
+        timer++;      
+    }
+
+    // Updates data and map between in-game ticks
+    private void _Update()
+    {
         if (currentRegion < batchRegions) 
         {
             int remainderToAdd = 0;
@@ -57,25 +66,22 @@ public class World : Node2D
 
             currentRegion++;
         }
-
-        if (timer == tickRate) // every tick of in-game time
-        {
-            date._UpdateDate();
-            // render calculated map colors ***
-            map._UpdateColorsAll();
-
-            // Prepare data for next update
-            data._FinishUpdate();
-
-            // start updates for the next tick
-            currentRegion = 0;
-
-            // reset tick timer
-            timer = 0;
-        }
-        timer++;      
     }
 
+    // Performs updates required at the end of each in-game tick
+    private void _TickUpdate()
+    {
+            date._UpdateDate();
+
+            map._UpdateColorsAll(); // render calculated map colors
+            data._FinishUpdate(); // prepare data for next update
+            
+            currentRegion = 0; // start updates for the next tick
+            timer = 0; // reset tick timer
+    }
+
+    // Calculates the size of an update region based on the size of the world
+    // and the number of regions required (batchRegions)
     private void _CalculateRegionDimensions()
     {
         regionDimensions = new Vector2(width / batchRegions, height);
@@ -83,11 +89,6 @@ public class World : Node2D
         {
             remainder = width % batchRegions; // in the case of uneven division
         } 
-    }
-
-    public Date _GetSimDateTime()
-    {
-        return date;
     }
 
 }

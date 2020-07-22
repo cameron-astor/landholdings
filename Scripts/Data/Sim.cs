@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 /* 
     Contains static functions which make up the simulation.
@@ -8,6 +9,37 @@ using System;
  */
 public static class Sim
 {
+
+    /* Accepts a WorldTile and checks whether the peasant family in that tile has been updated yet.
+       If it hasn't, updates all tiles belonging to that peasant family, else only updates ecology */
+    public static void _SimPeasants(WorldTile current, HashSet<PeasantFamily> updatedPeasants, Date date)
+    {
+        // update based on peasants
+        PeasantFamily p = current.holding.owner;
+        if (p != null) // if the tile is owned
+        {
+            if (!updatedPeasants.Contains(p)) // and the owner has not yet been updated
+            {
+                foreach (Holding h in p.holdings)
+                {
+                    foreach(WorldTile land in h.constituentTiles)
+                    {
+                        Sim._UpdateEcology(land, date); // perform tile updates for all tiles owned by this peasant
+                    }
+                }
+
+                // perform peasant-wide operations here
+                p._Harvest();
+                p._Metabolize();
+
+                updatedPeasants.Add(p); // mark as updated
+            }
+            if (p.dead == true) // remove dead peasants
+                current.holding.owner = null;
+        } else { // if the tile is not owned
+            Sim._UpdateEcology(current, date);
+        }
+    }
 
     // Updates food in a tile based on month
     public static void _UpdateEcology(WorldTile t, Date date)

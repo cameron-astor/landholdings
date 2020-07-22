@@ -17,7 +17,7 @@ public class GUIRoot : Control
     {
         worldData = GetNode<Data>("../../World/Data");
         world = GetNode<World>("../../World");
-        dateData = world._GetSimDateTime();
+        dateData = world.date;
 
         date = GetNode<Label>("DateUI");
         FPS = GetNode<Label>("FPS");

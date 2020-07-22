@@ -24,9 +24,9 @@ public class Data : Node
 
     // World dimensions
     [Export] 
-    public int width { get; set; } = 100;
+    public int width { get; private set; } = 100;
     [Export]
-    public int height { get; set; } = 100;
+    public int height { get; private set; } = 100;
 
     // Perlin noise parameters
     [Export]
@@ -72,31 +72,7 @@ public class Data : Node
             for (int y = 0; y < regionDimensions.y; y++)
             {
                 current = world[x, y];
-                // update based on peasants
-                PeasantFamily p = current.holding.owner;
-                if (p != null) // if the tile is owned
-                {
-                    if (!updatedPeasants.Contains(p)) // and the owner has not yet been updated
-                    {
-                        foreach (Holding h in p.holdings)
-                        {
-                            foreach(WorldTile land in h.constituentTiles)
-                            {
-                                Sim._UpdateEcology(land, date); // perform tile updates for all tiles owned by this peasant
-                            }
-                        }
-
-                        // perform peasant-wide operations here
-                        p._Harvest();
-                        p._Metabolize();
-
-                        updatedPeasants.Add(p); // mark as updated
-                    }
-                    if (p.dead == true) // remove dead peasants
-                        current.holding.owner = null;
-                } else { // if the tile is not owned
-                    Sim._UpdateEcology(current, date);
-                }
+                Sim._SimPeasants(current, updatedPeasants, date);
             }
         }
 
