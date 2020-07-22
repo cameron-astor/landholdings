@@ -12,9 +12,6 @@ public class WorldTile : Node
     public AGRICULTURE_TYPE AgType { get; set; } = AGRICULTURE_TYPE.None;
     public double food  { get; set; } = 0.0;
 
-    // Population
-    private int pop = 0;
-
     // Property
     public Holding holding { get; set; }
 

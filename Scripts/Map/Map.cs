@@ -26,6 +26,8 @@ public class Map : Node2D
     private Color cPasture;
     private Color cWaste;
 
+    private Color BLANK;
+
     // Colormaps
     // Maps colors to a particular data id
     private Godot.Collections.Dictionary<int, Color> holdingColors;
@@ -33,10 +35,10 @@ public class Map : Node2D
 
     // Map modes
     private enum MAP_MODES {
-        Terrain = 0, Population = 1, Landholdings = 2, Peasants = 3, Food = 4
+        Terrain = 0, Landholdings = 1, Peasants = 2, Food = 3
     }
     private int currentMapMode = 0;
-    private MAP_MODES[] mapModes = {MAP_MODES.Terrain, MAP_MODES.Population, MAP_MODES.Landholdings, 
+    private MAP_MODES[] mapModes = {MAP_MODES.Terrain, MAP_MODES.Landholdings, 
 				                    MAP_MODES.Peasants, MAP_MODES.Food};
 
     // Map data
@@ -95,6 +97,8 @@ public class Map : Node2D
     private void _InitializeGraphics()
     {
         baseTile = (Texture) GD.Load("res://Graphics/Tile.png");
+
+        BLANK = new Color(255, 255, 255, 0);
 
         cArable = new Color("5F6B41");
         cPasture = new Color("DBC164");
@@ -202,12 +206,14 @@ public class Map : Node2D
             if (tile.holding.owner != null) 
             {
                 tileSummary["5. Peasant Family ID"] = tile.holding.owner.id.ToString();
+                tileSummary["7. Peasant food supply"] = tile.holding.owner.foodSupply.ToString();
             }
             else {
                 tileSummary["5. Peasant Family ID"] = "No peasants";
             }
 
             tileSummary["6. Food"] = tile.food.ToString();
+
             
             GD.Print(tileSummary);	
         }
@@ -293,7 +299,7 @@ public class Map : Node2D
         _UpdateColorsAll(currentColorMap);
     }
 
-    // Updates a single map tile
+    // Updates a single map tile (DEPRECATED)
     private void _UpdateTile(int x, int y)
     {
         WorldTile current;
@@ -320,12 +326,6 @@ public class Map : Node2D
                 c = cPasture;
             if (current.AgType == WorldTile.AGRICULTURE_TYPE.Waste)
                 c = cWaste;
-        }
-
-        if (mapModes[currentMapMode] == MAP_MODES.Population)
-        {
-            // Not implemented
-            c = new Color(0, 0, 0, 0.0f);
         }
 
         if (mapModes[currentMapMode] == MAP_MODES.Landholdings)
@@ -379,6 +379,8 @@ public class Map : Node2D
             {
                 int peasant = current.holding.owner.id;
                 currentColorMap[x, y][(int)MAP_MODES.Peasants] = peasantColors[peasant];
+            } else {
+                currentColorMap[x, y][(int)MAP_MODES.Peasants] = BLANK;
             }
         }                
 

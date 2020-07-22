@@ -84,9 +84,13 @@ public class Data : Node
                         }
 
                         // perform peasant-wide operations here
+                        p._Harvest();
+                        p._Metabolize();
 
                         updatedPeasants.Add(p); // mark as updated
                     }
+                    if (p.dead == true) // remove dead peasants
+                        current.holding.owner = null;
                 } else { // if the tile is not owned
                     Sim._UpdateEcology(current, date);
                 }
