@@ -101,7 +101,7 @@ public class Data : Node
         {
             for (int y = 0; y < height; y++)
             {
-                WorldTile tile = new WorldTile();
+                WorldTile tile = new WorldTile(x, y);
                 WorldTile.AGRICULTURE_TYPE type = _GetNoiseTile(noise.GetNoise2d((float) x, (float) y));
 
                 tile.AgType = type;
@@ -163,8 +163,9 @@ public class Data : Node
                 {
                     // init peasant
                     peasant = new PeasantFamily();
-                    peasant.size = ((int) GD.Randi() % 10) + 1;
-                    peasant.id = id;
+                    peasant._InitData(id, world, width, height);
+                    peasant._CalculateAdjacencies(x, y);
+
                     peasant.holdings.Add(current.holding); // register holding with peasant
                     current.holding.owner = peasant; // register peasant with holding
 

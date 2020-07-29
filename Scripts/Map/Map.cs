@@ -35,11 +35,11 @@ public class Map : Node2D
 
     // Map modes
     private enum MAP_MODES {
-        Terrain = 0, Landholdings = 1, Peasants = 2, Food = 3
+        Terrain = 0, Landholdings = 1, Peasants = 2, Food = 3, FoodSupply = 4
     }
     private int currentMapMode = 0;
     private MAP_MODES[] mapModes = {MAP_MODES.Terrain, MAP_MODES.Landholdings, 
-				                    MAP_MODES.Peasants, MAP_MODES.Food};
+				                    MAP_MODES.Peasants, MAP_MODES.Food, MAP_MODES.FoodSupply};
 
     // Map data
     private Sprite[,] map;
@@ -126,10 +126,8 @@ public class Map : Node2D
                 List<Color> list2 = new List<Color>();
                 for (int i = 0; i < mapModes.Length; i++)
                 {
-                    Color c = new Color(0, 0, 0);
-                    Color c2 = new Color(0, 0, 0);
-                    list.Add(c);
-                    list2.Add(c2);
+                    list.Add(BLANK);
+                    list2.Add(BLANK);
                 }
                 allColors[x, y] = list;
                 allColorsCopy[x, y] = list2;
@@ -205,8 +203,7 @@ public class Map : Node2D
             tileSummary["3. Holding ID"] = tile.holding.holdingID.ToString();
             if (tile.holding.owner != null) 
             {
-                tileSummary["5. Peasant Family ID"] = tile.holding.owner.id.ToString();
-                tileSummary["7. Peasant food supply"] = tile.holding.owner.foodSupply.ToString();
+                tile.holding.owner._PrintDebug();
             }
             else {
                 tileSummary["5. Peasant Family ID"] = "No peasants";
@@ -216,18 +213,6 @@ public class Map : Node2D
 
             
             GD.Print(tileSummary);	
-        }
-    }
-
-    // Updates the map tiles for the current mapmode
-    private void _UpdateMap()
-    {
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                _UpdateTile(x, y);
-            }
         }
     }
 
@@ -268,19 +253,6 @@ public class Map : Node2D
         }
     }
 
-    // Updates the whole map to match the colors in
-    // the colors[,] 2d array
-    public void _UpdateColors()
-    {
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                // map[x, y].Modulate = colors[x, y];
-            }
-        }
-    }
-
     // Updates the whole map's colors based on the current color map
     // and the current map mode
     private void _UpdateColorsAll(List<Color>[,] colormap)
@@ -294,65 +266,13 @@ public class Map : Node2D
         }        
     }
 
+    // Public accessor for _UpdateColorsAll
     public void _UpdateColorsAll()
     {
         _UpdateColorsAll(currentColorMap);
     }
 
-    // Updates a single map tile (DEPRECATED)
-    private void _UpdateTile(int x, int y)
-    {
-        WorldTile current;
-        // Map mode logic
-        current = world[x, y];
-        map[x, y].Modulate = _CalculateColor(current);     
-    }
-
-    // Takes in a WorldTile and calculates the 
-    // color for that tile based on the currently
-    // selected map mode.
-    private Color _CalculateColor(WorldTile current)
-    {
-        Color c;
-        double alpha;
-
-        c = new Color(0, 0, 0); // default value
-
-        if (mapModes[currentMapMode] == MAP_MODES.Terrain)
-        {
-            if (current.AgType == WorldTile.AGRICULTURE_TYPE.Arable)
-                c = cArable;
-            if (current.AgType == WorldTile.AGRICULTURE_TYPE.Pasture)
-                c = cPasture;
-            if (current.AgType == WorldTile.AGRICULTURE_TYPE.Waste)
-                c = cWaste;
-        }
-
-        if (mapModes[currentMapMode] == MAP_MODES.Landholdings)
-        {
-            int id = current.holding.holdingID;
-            if (id != -1)
-                c = holdingColors[id];
-        }
-
-        if (mapModes[currentMapMode] == MAP_MODES.Peasants)
-        {
-            int id = current.holding.holdingID;
-            if (current.holding.owner != null) {
-                int peasant = current.holding.owner.id;
-                c = peasantColors[peasant];
-            }
-        }
-
-        if (mapModes[currentMapMode] == MAP_MODES.Food)
-        {
-            alpha = (float) current.food / current.food + 5;
-            c = new Color(0, 1, 0, (float) alpha);
-        }        
-
-        return c;
-    }
-
+    // For a single world tile, calculates the colors for all mapmodes
     private void _CalculateAllColors(WorldTile current, int x, int y)
     {
         double alpha;
@@ -372,13 +292,18 @@ public class Map : Node2D
             currentColorMap[x, y][(int)MAP_MODES.Landholdings] = holdingColors[hid];
         }
 
-        // assign peasant colors
         if (current.holding != null) 
         {
             if (current.holding.owner != null)
             {
+                // assign peasant colors
                 int peasant = current.holding.owner.id;
                 currentColorMap[x, y][(int)MAP_MODES.Peasants] = peasantColors[peasant];
+
+                // assign food supply colors
+                double foodSupply = current.holding.owner.foodSupply;
+                alpha = foodSupply / (foodSupply + 50);
+                currentColorMap[x, y][(int)MAP_MODES.FoodSupply] = new Color(1, 0, 0, (float) alpha);
             } else {
                 currentColorMap[x, y][(int)MAP_MODES.Peasants] = BLANK;
             }

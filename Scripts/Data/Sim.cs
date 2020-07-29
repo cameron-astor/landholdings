@@ -7,6 +7,12 @@ using System.Collections.Generic;
     Each function acts on a single world tile, accepting references to whatever external 
     data is required.
  */
+
+ /*
+    TODO:
+    - Figure out how to rework the batch processing to work with the higher level entities that need to be
+      processed as a unit (that might span multiple update blocks )
+ */
 public static class Sim
 {
 
@@ -29,8 +35,10 @@ public static class Sim
                 }
 
                 // perform peasant-wide operations here
-                p._Harvest();
+                if (date.month == (int) Date.MONTHS.July)
+                    p._Harvest();
                 p._Metabolize();
+                p._OccupyEmptyLand();
 
                 updatedPeasants.Add(p); // mark as updated
             }
