@@ -78,7 +78,8 @@ public class Data : Node
             for (int y = 0; y < regionDimensions.y; y++)
             {
                 current = world[x, y];
-                Sim._SimPeasants(current, updatedPeasants, date);
+                if (current.holding.owner is PeasantFamily)
+                    Sim._SimPeasants(current, updatedPeasants, date);
             }
         }
 
@@ -89,6 +90,7 @@ public class Data : Node
     {
         _GenerateTerrain();
         _GenerateHoldings();
+        _GenerateAristocrats();
         _GeneratePeasants();
     }
 
@@ -165,7 +167,7 @@ public class Data : Node
             for (int y = 0; y < height; y++)
             {
                 current = world[x, y];
-                if (current.holding.type != Holding.HOLDING_TYPE.None)
+                if (current.holding.type == Holding.HOLDING_TYPE.Freehold)
                 {
                     // init peasant
                     peasant = new PeasantFamily();
@@ -201,29 +203,99 @@ public class Data : Node
                     if (rand == (aristocratDensity / 2))
                     {
                         a = new Aristocrat();
+                        a._InitData(id, world, width, height);
+                        id++;
+
                         current.holding.owner = a;
-                        _CreateAristocratHolding(current);
+                        current.holding.type = Holding.HOLDING_TYPE.Manor;
+                        _CreateAristocratHolding(current, a);
                     }
                 }
             }
         }
     }
 
-    private void _CreateAristocratHolding(WorldTile t)
+    private void _CreateAristocratHolding(WorldTile t, Aristocrat a)
     {
         int x = (int) t.coords.x;
         int y = (int) t.coords.y;
         GD.Randomize();
         int rand = 0;
-        
-        for (int i = 0; i < 8; i++)
-        {
-            rand = (int) (GD.Randi() % 3);
-            // if ((x - 1) >= 0 && (y - 1) >= 0))
-            // {
-            //     if (rand == 2)
+        int factor =10;
 
-            // }
+        HashSet<Vector2> holdingsToAdd = new HashSet<Vector2>();
+        
+        for (int i = 0; i < 8; i++) // create a randomly shaped large manor holding
+        {
+            rand = (int) (GD.Randi() % factor);
+            if ((x - 1) >= 0 && (y - 1) >= 0) // top left
+            {
+                if (rand == 2)
+                {
+                    holdingsToAdd.Add(new Vector2(x - 1, y - 1));
+                }
+            }
+            rand = (int) (GD.Randi() % factor);
+            if ((y - 1) >= 0) // top
+            {
+                if (rand == 2)
+                {
+                    holdingsToAdd.Add(new Vector2(x, y - 1));
+                }               
+            }
+            rand = (int) (GD.Randi() % factor);
+            if ((x + 1) < width && (y - 1) >= 0) // top right
+            {
+                if (rand == 2)
+                {
+                    holdingsToAdd.Add(new Vector2(x + 1, y - 1));
+                }                
+            }
+            rand = (int) (GD.Randi() % factor);
+            if ((x + 1) < width) // right
+            {
+                if (rand == 2)
+                {
+                    holdingsToAdd.Add(new Vector2(x + 1, y));
+                } 
+            }
+            rand = (int) (GD.Randi() % factor);
+            if ((x + 1) < width && (y + 1) < height) // bottom right
+            {
+                if (rand == 2)
+                {
+                    holdingsToAdd.Add(new Vector2(x + 1, y + 1));
+                } 
+            }
+            rand = (int) (GD.Randi() % factor);
+            if ((y + 1) < height) // bottom
+            {
+                if (rand == 2)
+                {
+                    holdingsToAdd.Add(new Vector2(x, y + 1));
+                } 
+            }
+            rand = (int) (GD.Randi() % factor);
+            if ((x - 1) >= 0 && (y + 1) < height) // bottom left
+            {
+                if (rand == 2)
+                {
+                    holdingsToAdd.Add(new Vector2(x - 1, y + 1));
+                } 
+            }
+            rand = (int) (GD.Randi() % factor);
+            if ((x - 1) >= 0) // left
+            {
+                if (rand == 2)
+                {
+                    holdingsToAdd.Add(new Vector2(x - 1, y));
+                } 
+            }
+        }
+
+        foreach (Vector2 v in holdingsToAdd)
+        {
+            world[(int) v.x, (int) v.y].holding = t.holding; // combine all holdings into one
         }
 
     }

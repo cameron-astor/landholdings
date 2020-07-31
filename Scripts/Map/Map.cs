@@ -32,14 +32,15 @@ public class Map : Node2D
     // Maps colors to a particular data id
     private Godot.Collections.Dictionary<int, Color> holdingColors;
     private Godot.Collections.Dictionary<int, Color> peasantColors;
+    private Godot.Collections.Dictionary<int, Color> aristocratColors;
 
     // Map modes
     private enum MAP_MODES {
-        Terrain = 0, Landholdings = 1, Peasants = 2, Food = 3, FoodSupply = 4
+        Terrain = 0, Landholdings = 1, Peasants = 2, Aristocrats = 3, Food = 4, FoodSupply = 5
     }
     private int currentMapMode = 0;
     private MAP_MODES[] mapModes = {MAP_MODES.Terrain, MAP_MODES.Landholdings, 
-				                    MAP_MODES.Peasants, MAP_MODES.Food, MAP_MODES.FoodSupply};
+				                    MAP_MODES.Peasants, MAP_MODES.Aristocrats, MAP_MODES.Food, MAP_MODES.FoodSupply};
 
     // Map data
     private Sprite[,] map;
@@ -138,6 +139,7 @@ public class Map : Node2D
         // Init colormaps
         peasantColors = new Godot.Collections.Dictionary<int, Color>();
         holdingColors = new Godot.Collections.Dictionary<int, Color>();
+        aristocratColors = new Godot.Collections.Dictionary<int, Color>();
 
     }
 
@@ -185,6 +187,14 @@ public class Map : Node2D
             PeasantFamily p = (PeasantFamily) world[x, y].holding.owner;
             int peasantID = p.id;
             peasantColors[peasantID] = color;
+        }
+
+        // Add aristocrat data to colormap
+        if (world[x, y].holding.owner != null && world[x, y].holding.owner is Aristocrat)
+        {
+            Aristocrat a = (Aristocrat) world[x, y].holding.owner;
+            int id = a.id;
+            aristocratColors[id] = color;
         }
     }
 
@@ -309,6 +319,12 @@ public class Map : Node2D
                 currentColorMap[x, y][(int)MAP_MODES.FoodSupply] = new Color(1, 0, 0, (float) alpha);
             } else {
                 currentColorMap[x, y][(int)MAP_MODES.Peasants] = BLANK;
+            }
+            if (current.holding.owner != null && current.holding.owner is Aristocrat)
+            {
+                Aristocrat a = (Aristocrat) current.holding.owner;
+                int aid = a.id;
+                currentColorMap[x, y][(int) MAP_MODES.Aristocrats] = aristocratColors[aid];
             }
         }                
 

@@ -5,11 +5,6 @@ using System.Collections.Generic;
 public class PeasantFamily : Stratum
 {
 
-    // Reference to the world
-    public WorldTile[,] world { private get; set; }
-    public int width { private get; set; }
-    public int height { private get; set; }
-
     public PeasantFamily()
     {
         holdings = new HashSet<Holding>();
@@ -19,10 +14,8 @@ public class PeasantFamily : Stratum
     public HashSet<Holding> holdings { get; private set; } // the holdings of the peasant
     public HashSet<WorldTile> adjacencies { get; private set; } // coords of tiles adjacent to peasant's land
 
-    public int id  { get; set; } = -1;
-    public int size { get; set; } = 0; // all members of household
     public int laborPower { get; set; } = 0; // members of household able to work in fields?
-    public double foodSupply { get; set; } = 5.0; // default starting supply
+    public new double foodSupply { get; set; } = 5.0; // default starting supply for peasants
 
     // flags
     public bool dead { get; private set; }= false;
@@ -108,7 +101,7 @@ public class PeasantFamily : Stratum
         }       
     }
 
-    public void _PrintDebug()
+    public override void _PrintDebug()
     {
         GD.Print("\n# PEASANT SUMMARY #");
         GD.Print("Adjacencies:");

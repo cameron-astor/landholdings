@@ -20,6 +20,7 @@ tickRate = 20
 
 [node name="Data" type="Node" parent="World"]
 script = ExtResource( 2 )
+aristocratDensity = 100
 
 [node name="Map" type="Node2D" parent="World"]
 script = ExtResource( 1 )
