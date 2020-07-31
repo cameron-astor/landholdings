@@ -180,16 +180,16 @@ public class Map : Node2D
                             (float) GD.RandRange(0, 1), 
                             (float) GD.RandRange(0, 1));
  
-        if (world[x, y].holding.owner != null)
+        if (world[x, y].holding.owner != null && world[x, y].holding.owner is PeasantFamily)
         {
-            int peasantID = world[x, y].holding.owner.id;
+            PeasantFamily p = (PeasantFamily) world[x, y].holding.owner;
+            int peasantID = p.id;
             peasantColors[peasantID] = color;
         }
     }
 
     private void _PrintTileSummary()
     {
-        Godot.Collections.Dictionary<string, string> tileSummary = new Godot.Collections.Dictionary<string, string>();
         Vector2 coordinates = new Vector2(
             Mathf.Round(GetGlobalMousePosition().x / 16),
             Mathf.Round(GetGlobalMousePosition().y / 16)
@@ -198,21 +198,22 @@ public class Map : Node2D
             && coordinates.x > -1 && coordinates.y > -1)
         {
             WorldTile tile = world[(int) coordinates.x, (int) coordinates.y];
-            tileSummary["1. Coordinates"] = coordinates.ToString();
-            tileSummary["2. Agriculture"] = tile.AgType.ToString();
-            tileSummary["3. Holding ID"] = tile.holding.holdingID.ToString();
+            tile._PrintDebug();
             if (tile.holding.owner != null) 
             {
-                tile.holding.owner._PrintDebug();
+                if (tile.holding.owner is PeasantFamily)
+                {
+                    PeasantFamily p = (PeasantFamily) tile.holding.owner;
+                    p._PrintDebug();
+                } else if (tile.holding.owner is Aristocrat)
+                {
+                    Aristocrat a = (Aristocrat) tile.holding.owner;
+                    a._PrintDebug();
+                }
             }
             else {
-                tileSummary["5. Peasant Family ID"] = "No peasants";
+                GD.Print("No strata present");
             }
-
-            tileSummary["6. Food"] = tile.food.ToString();
-
-            
-            GD.Print(tileSummary);	
         }
     }
 
@@ -294,14 +295,16 @@ public class Map : Node2D
 
         if (current.holding != null) 
         {
-            if (current.holding.owner != null)
+            if (current.holding.owner != null && current.holding.owner is PeasantFamily)
             {
+
                 // assign peasant colors
-                int peasant = current.holding.owner.id;
-                currentColorMap[x, y][(int)MAP_MODES.Peasants] = peasantColors[peasant];
+                PeasantFamily p = (PeasantFamily) current.holding.owner;
+                int pid = p.id;
+                currentColorMap[x, y][(int) MAP_MODES.Peasants] = peasantColors[pid];
 
                 // assign food supply colors
-                double foodSupply = current.holding.owner.foodSupply;
+                double foodSupply = p.foodSupply;
                 alpha = foodSupply / (foodSupply + 50);
                 currentColorMap[x, y][(int)MAP_MODES.FoodSupply] = new Color(1, 0, 0, (float) alpha);
             } else {

@@ -21,7 +21,7 @@ public static class Sim
     public static void _SimPeasants(WorldTile current, HashSet<PeasantFamily> updatedPeasants, Date date)
     {
         // update based on peasants
-        PeasantFamily p = current.holding.owner;
+        PeasantFamily p = (PeasantFamily) current.holding.owner;
         if (p != null) // if the tile is owned
         {
             if (!updatedPeasants.Contains(p)) // and the owner has not yet been updated

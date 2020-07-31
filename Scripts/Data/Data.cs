@@ -38,6 +38,10 @@ public class Data : Node
     [Export]
     private float persistence = 0.75f;
 
+    // Other params
+    [Export]
+    private int aristocratDensity = 10;
+
     // Data containers
     public WorldTile[,] world { get; private set; }
 
@@ -46,6 +50,7 @@ public class Data : Node
         // init containers, etc
         world = new WorldTile[width, height];
         updatedPeasants = new HashSet<PeasantFamily>();
+        updatedAristocrats = new HashSet<Aristocrat>();
 
         _GenerateWorld();
     }
@@ -53,6 +58,7 @@ public class Data : Node
     // Sets which keep track of what higher level entities have been updated in the 
     // current update so far. (move into another file pls)
     private HashSet<PeasantFamily> updatedPeasants;
+    private HashSet<Aristocrat> updatedAristocrats;
 
     // Intended to be called when each full update is complete.
     // Resets update logistics (like sets of entities)
@@ -79,7 +85,7 @@ public class Data : Node
     }
 
     // Runs all generation functions
-    public void _GenerateWorld()
+    private void _GenerateWorld()
     {
         _GenerateTerrain();
         _GenerateHoldings();
@@ -87,7 +93,7 @@ public class Data : Node
     }
 
     // Uses Open Simplex Noise to generate terrain
-    public void _GenerateTerrain()
+    private void _GenerateTerrain()
     {
         GD.Randomize(); // reseed rng
         OpenSimplexNoise noise = new OpenSimplexNoise();
@@ -122,7 +128,7 @@ public class Data : Node
     }
 
     // Generates land holdings, one per tile
-    public void _GenerateHoldings()
+    private void _GenerateHoldings()
     {
         int id = 0;
         WorldTile t;
@@ -149,7 +155,7 @@ public class Data : Node
     }
 
     // Generates peasant families. Puts one peasant family in each single-tile holding
-    public void _GeneratePeasants()
+    private void _GeneratePeasants()
     {
         WorldTile current;
         PeasantFamily peasant;
@@ -175,4 +181,50 @@ public class Data : Node
         }
     }
 
+    private void _GenerateAristocrats()
+    {
+        WorldTile current;
+        Aristocrat a;
+        int id = 0;
+
+        GD.Randomize();
+        int rand = 0;
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                current = world[x, y];
+                if (current.AgType == WorldTile.AGRICULTURE_TYPE.Arable && current.holding.owner == null)
+                {
+                    rand = (int) (GD.Randi() % aristocratDensity);
+                    if (rand == (aristocratDensity / 2))
+                    {
+                        a = new Aristocrat();
+                        current.holding.owner = a;
+                        _CreateAristocratHolding(current);
+                    }
+                }
+            }
+        }
+    }
+
+    private void _CreateAristocratHolding(WorldTile t)
+    {
+        int x = (int) t.coords.x;
+        int y = (int) t.coords.y;
+        GD.Randomize();
+        int rand = 0;
+        
+        for (int i = 0; i < 8; i++)
+        {
+            rand = (int) (GD.Randi() % 3);
+            // if ((x - 1) >= 0 && (y - 1) >= 0))
+            // {
+            //     if (rand == 2)
+
+            // }
+        }
+
+    }
 }

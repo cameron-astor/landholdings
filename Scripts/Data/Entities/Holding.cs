@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 /*
     Represents a landholding.
-    Is owned by a PeasantFamily.
+    Is owned by a Stratum (aristocrat or peasant)
 */
 public class Holding
 {
@@ -16,11 +16,11 @@ public class Holding
     }
 
     public enum HOLDING_TYPE {
-        None, Freehold
+        None, Freehold, Manor
     }
 
     public int holdingID { get; set; } = -1;
-    public PeasantFamily owner { get; set; }
+    public Stratum owner { get; set; }
     public HOLDING_TYPE type { get; set; } = HOLDING_TYPE.Freehold;
 
     public HashSet<WorldTile> constituentTiles { get; private set; } // The set of tiles that the holding consists of

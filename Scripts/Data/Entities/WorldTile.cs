@@ -28,4 +28,13 @@ public class WorldTile : Node
 
     }
 
+    public void _PrintDebug()
+    {
+        GD.Print("# TILE INFO #");
+        GD.Print("Coordinates: " + coords);
+        GD.Print("Agriculture Type: " + AgType.ToString());
+        GD.Print("Food in tile: " + food);
+        GD.Print("Holding in tile: " + holding.holdingID);
+    }
+
 }
