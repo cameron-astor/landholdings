@@ -4,6 +4,10 @@ using System;
 /* The World manages the simulation, such as splitting the map up for updates
    and holding various logistical data. 
 */
+
+/* TODO
+    - create a more responsive system for changing speed
+*/
 public class World : Node2D
 {
     
@@ -25,6 +29,10 @@ public class World : Node2D
 
     // In-game date
     public Date date { get; private set; }
+
+    // Flags
+    bool speedUp = false;
+    bool slowDown = false;
 
     public override void _Ready()
     {
@@ -49,6 +57,23 @@ public class World : Node2D
             _TickUpdate();
         }
         timer++;      
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        // speed up
+        if (Input.IsActionPressed("speed_up")
+            && Input.IsActionJustPressed("speed_up")) 
+        {
+            speedUp = true;
+        }
+
+        // slow down
+        if (Input.IsActionPressed("speed_down")
+            && Input.IsActionJustPressed("speed_down"))
+        {
+            slowDown = true;
+        }
     }
 
     // Updates data and map between in-game ticks
@@ -76,6 +101,25 @@ public class World : Node2D
             map._UpdateColorsAll(); // render calculated map colors
             data._FinishUpdate(); // prepare data for next update
             
+            // process speed updates
+            if (slowDown)
+            {
+                if (tickRate < 80)
+                {
+                    tickRate = tickRate + 10;
+                    GD.Print("Slowing down" + tickRate);
+                }
+                slowDown = false;
+            } else if (speedUp)
+            {
+                if (tickRate > 10)
+                {
+                    tickRate = tickRate - 10;
+                    GD.Print("Speeding up" + tickRate);
+                }
+                speedUp = false;
+            }
+
             currentRegion = 0; // start updates for the next tick
             timer = 0; // reset tick timer
     }

@@ -9,21 +9,20 @@ public class PeasantFamily : Stratum
     {
         holdings = new HashSet<Holding>();
         adjacencies = new HashSet<WorldTile>();
+        lord = null;
     }
 
     public HashSet<Holding> holdings { get; private set; } // the holdings of the peasant
     public HashSet<WorldTile> adjacencies { get; private set; } // coords of tiles adjacent to peasant's land
+
+    // manor lord (null if free peasant)
+    public Aristocrat lord { get; set; }
 
     public int laborPower { get; set; } = 0; // members of household able to work in fields?
     public new double foodSupply { get; set; } = 5.0; // default starting supply for peasants
 
     // flags
     public bool dead { get; private set; }= false;
-
-    public void _Sow()
-    {
-
-    }
 
     public void _Harvest()
     {
@@ -51,11 +50,14 @@ public class PeasantFamily : Stratum
         HashSet<WorldTile> newTiles = new HashSet<WorldTile>();
         foreach (WorldTile t in adjacencies)
         {
-            if (t.holding.owner == null && t.AgType == WorldTile.AGRICULTURE_TYPE.Arable)
+            // Cannot occupy empty aristocrat land, nor non-arable land
+            if (t.holding.owner == null && t.AgType == WorldTile.AGRICULTURE_TYPE.Arable
+                && t.holding.type == Holding.HOLDING_TYPE.Freehold)
             {
                 Holding h = t.holding;
                 holdings.Add(h);
                 h.owner = this;
+                h.occupier = this;
 
                 newTiles.Add(t);
             }
@@ -63,6 +65,22 @@ public class PeasantFamily : Stratum
         foreach (WorldTile w in newTiles)
         {
             _CalculateAdjacencies((int) w.coords.x, (int) w.coords.y);
+        }
+    }
+
+    // Pay taxes in-kind to the manor lord
+    public void _PayTax()
+    {
+        if (lord != null)
+        {
+            if ((foodSupply - lord.taxRate) >= 0)
+            {
+                lord.foodSupply += (this.foodSupply - lord.taxRate);
+                this.foodSupply -= lord.taxRate;
+            } else { // not enough to pay taxes in full
+                lord.foodSupply += this.foodSupply;
+                this.foodSupply = 0;
+            }
         }
     }
 

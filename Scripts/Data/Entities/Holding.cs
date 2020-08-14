@@ -16,11 +16,12 @@ public class Holding
     }
 
     public enum HOLDING_TYPE {
-        None, Freehold, Manor
+        None, Freehold, Manor, Villeinage, Copyhold
     }
 
     public int holdingID { get; set; } = -1;
     public Stratum owner { get; set; }
+    public Stratum occupier { get; set; }
     public HOLDING_TYPE type { get; set; } = HOLDING_TYPE.Freehold;
 
     public HashSet<WorldTile> constituentTiles { get; private set; } // The set of tiles that the holding consists of

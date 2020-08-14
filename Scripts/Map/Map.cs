@@ -324,7 +324,26 @@ public class Map : Node2D
             {
                 Aristocrat a = (Aristocrat) current.holding.owner;
                 int aid = a.id;
-                currentColorMap[x, y][(int) MAP_MODES.Aristocrats] = aristocratColors[aid];
+                if (current.holding.occupier == a) // if is demesne land
+                {
+                    currentColorMap[x, y][(int) MAP_MODES.Aristocrats] = aristocratColors[aid];                
+                } else {
+                    Color c = aristocratColors[aid];
+                    if (current.holding.type == Holding.HOLDING_TYPE.Villeinage) // shade and tint for peasant tenants
+                    {
+                        c = new Color((float) (c.r * 0.65),(float) (c.g * 0.65),(float) (c.b * 0.65), 1);
+                        currentColorMap[x, y][(int) MAP_MODES.Aristocrats] = c;
+                    } else if (current.holding.type == Holding.HOLDING_TYPE.Copyhold)
+                    {
+                        c = new Color((float) (c.r * 0.85),(float) (c.g * 0.85),(float) (c.b * 0.85), 1);
+                        currentColorMap[x, y][(int) MAP_MODES.Aristocrats] = c;
+                    }
+                }
+                
+                // assign food supply colors
+                double foodSupply = a.foodSupply;
+                alpha = foodSupply / (foodSupply + 50);
+                currentColorMap[x, y][(int)MAP_MODES.FoodSupply] = new Color(1, 0, 0, (float) alpha);
             }
         }                
 

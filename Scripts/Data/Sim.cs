@@ -43,10 +43,10 @@ public static class Sim
                 updatedPeasants.Add(p); // mark as updated
             }
             if (p.dead == true) // remove dead peasants
-                current.holding.owner = null;
-        } else { // if the tile is not owned
-            Sim._UpdateEcology(current, date);
-        }
+                if (current.holding.owner == p)
+                    current.holding.owner = null;
+                current.holding.occupier = null;
+        } 
     }
 
     // Updates food in a tile based on month

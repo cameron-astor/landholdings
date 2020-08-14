@@ -79,7 +79,18 @@ public class Data : Node
             {
                 current = world[x, y];
                 if (current.holding.owner is PeasantFamily)
+                {
                     Sim._SimPeasants(current, updatedPeasants, date);
+                }
+                else if (current.holding.owner is Aristocrat)
+                {
+                    Sim._UpdateEcology(current, date);
+                } 
+                else // no owner 
+                {
+                    Sim._UpdateEcology(current, date);
+                }  
+                
             }
         }
 
@@ -156,12 +167,13 @@ public class Data : Node
         }
     }
 
+    int peasantID = 0;
+
     // Generates peasant families. Puts one peasant family in each single-tile holding
     private void _GeneratePeasants()
     {
         WorldTile current;
         PeasantFamily peasant;
-        int id = 0;
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++)
@@ -171,13 +183,12 @@ public class Data : Node
                 {
                     // init peasant
                     peasant = new PeasantFamily();
-                    peasant._InitData(id, world, width, height);
+                    peasant._InitData(peasantID, world, width, height);
                     peasant._CalculateAdjacencies(x, y);
 
                     peasant.holdings.Add(current.holding); // register holding with peasant
                     current.holding.owner = peasant; // register peasant with holding
-
-                    id++;
+                    peasantID++;
                 }
             }
         }
@@ -207,6 +218,7 @@ public class Data : Node
                         id++;
 
                         current.holding.owner = a;
+                        current.holding.occupier = a;
                         current.holding.type = Holding.HOLDING_TYPE.Manor;
                         _CreateAristocratHolding(current, a);
                     }
@@ -221,7 +233,7 @@ public class Data : Node
         int y = (int) t.coords.y;
         GD.Randomize();
         int rand = 0;
-        int factor =10;
+        int factor = 10;
 
         HashSet<Vector2> holdingsToAdd = new HashSet<Vector2>();
         
@@ -295,7 +307,36 @@ public class Data : Node
 
         foreach (Vector2 v in holdingsToAdd)
         {
-            world[(int) v.x, (int) v.y].holding = t.holding; // combine all holdings into one
+            GD.Randomize();
+            rand = (int) (GD.Randi() % 3); // generate either more demense land, villein tenures or copyhold tenures
+
+            Holding h = world[(int) v.x,(int) v.y].holding;
+            if (rand == 0) // demense
+            {
+                h.type = Holding.HOLDING_TYPE.Manor;
+                h.owner = a;
+                h.occupier = a;
+            } else {
+                if (rand == 1) // villeinage
+                {
+                    h.type = Holding.HOLDING_TYPE.Villeinage;
+                } else { // copyhold
+                    h.type = Holding.HOLDING_TYPE.Copyhold;
+                }
+                
+                h.owner = a;
+
+                // peasant occupier
+                PeasantFamily peasant = new PeasantFamily();
+                peasant._InitData(peasantID, world, width, height);
+                peasant._CalculateAdjacencies(x, y);
+
+                h.occupier = peasant;
+                peasant.holdings.Add(h);
+                a.tenants.Add(peasant);
+
+                peasantID++;
+            } 
         }
 
     }
